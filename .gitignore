@@ -6,3 +6,7 @@ lib
 .idea
 out
 */*.iml
+
+# New with maven migration
+target/
+*.iml

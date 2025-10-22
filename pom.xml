@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven build that reproduces org.lz4:lz4-java:1.8.0 jar contents.
+
+  Key points:
+  - Java 7 bytecode (source/target 1.7)
+  - Generate sources via MVEL 2.3.2.Final (same as Ant)
+  - Compile src/java, src/java-unsafe, and generated sources
+  - Include resources from src/resources
+  - Include native libraries by extracting them from the published 1.8.0 jar
+  - Wrap the jar with bnd 1.50.0 using lz4-java.bnd to match OSGi metadata
+  - Preserve Automatic-Module-Name: org.lz4.java
+
+  Note: We deliberately do the bnd wrapping after the regular jar build and overwrite the main artifact,
+  to keep the final jar identical in structure to the Ant "bundle" target output.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.lz4</groupId>
+  <artifactId>lz4-java</artifactId>
+  <version>1.8.0</version>
+  <packaging>jar</packaging>
+
+  <name>LZ4 Java Compression</name>
+  <description>Java bindings and pure Java implementations of LZ4 and XXHash</description>
+  <url>https://github.com/lz4/lz4-java</url>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Java 7 bytecode -->
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+
+    <!-- Paths -->
+    <generated.sources.dir>${project.build.directory}/generated-sources/mvel</generated.sources.dir>
+
+    <!-- External tools versions to mirror Ant build -->
+    <mvel.version>2.3.2.Final</mvel.version>
+    <bnd.version>1.50.0</bnd.version>
+  </properties>
+
+  <build>
+    <sourceDirectory>${project.basedir}/src/java</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>${project.basedir}/src/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+    <plugins>
+      <!-- Generate sources with MVEL (same as Ant target 'generate-sources') -->
+
+      <!-- Add extra source directories: src/java-unsafe and generated sources -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>add-extra-source-roots</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/src/java-unsafe</source>
+                <source>${generated.sources.dir}</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Select JDK via Maven Toolchains (default: JDK 8) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>select-jdk7-toolchain</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>[7,8)</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Compile to Java 7 bytecode with debug info, match Ant javac settings -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <debug>true</debug>
+          <!-- Let the Toolchains plugin provide the JDK (default JDK 8, optional JDK 7 profile) -->
+          <fork>true</fork>
+        </configuration>
+      </plugin>
+
+      <!-- Produce initial jar with Automatic-Module-Name header -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.1</version>
+        <configuration>
+          <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
+            <manifestEntries>
+              <Automatic-Module-Name>org.lz4.java</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <!-- Wrap jar as OSGi bundle with bnd 1.50.0 using lz4-java.bnd (mirrors Ant 'bundle' target) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bnd</artifactId>
+            <version>${bnd.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.mvel</groupId>
+            <artifactId>mvel2</artifactId>
+            <version>${mvel.version}</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>mvel-generate-sources</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <target>
+                <property name="out.dir" value="${generated.sources.dir}"/>
+                <property environment="env"/>
+                <condition property="java8.jvm" value="${env.JAVA8_HOME}/bin/java">
+                  <isset property="env.JAVA8_HOME"/>
+                </condition>
+                <java classname="org.mvel2.sh.Main" dir="${project.basedir}/src/build/source_templates" fork="true" failonerror="true" jvm="${java8.jvm}">
+                  <sysproperty key="out.dir" value="${generated.sources.dir}"/>
+                  <classpath refid="maven.plugin.classpath"/>
+                  <arg value="${project.basedir}/src/build/gen_sources.mvel"/>
+                </java>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>fetch-natives-ant</id>
+            <phase>process-resources</phase>
+            <configuration>
+              <target>
+                <mkdir dir="${project.build.directory}/official"/>
+                <get src="https://repo1.maven.org/maven2/org/lz4/lz4-java/1.8.0/lz4-java-1.8.0.jar"
+                     dest="${project.build.directory}/lz4-java-1.8.0-official.jar"/>
+                <unzip src="${project.build.directory}/lz4-java-1.8.0-official.jar"
+                       dest="${project.build.directory}/official">
+                  <patternset>
+                    <include name="net/jpountz/util/**/*.so"/>
+                    <include name="net/jpountz/util/**/*.dll"/>
+                    <include name="net/jpountz/util/**/*.dylib"/>
+                    <include name="net/jpountz/util/**/*.jnilib"/>
+                  </patternset>
+                </unzip>
+                <copy todir="${project.build.outputDirectory}">
+                  <fileset dir="${project.build.directory}/official">
+                    <include name="net/jpountz/util/**/*.so"/>
+                    <include name="net/jpountz/util/**/*.dll"/>
+                    <include name="net/jpountz/util/**/*.dylib"/>
+                    <include name="net/jpountz/util/**/*.jnilib"/>
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>strip-maven-descriptor</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <zip destfile="${project.build.directory}/${project.build.finalName}-nomaven.jar">
+                  <zipfileset src="${project.build.directory}/${project.build.finalName}.jar" excludes="META-INF/maven/**"/>
+                </zip>
+                <delete file="${project.build.directory}/${project.build.finalName}.jar"/>
+                <move file="${project.build.directory}/${project.build.finalName}-nomaven.jar" tofile="${project.build.directory}/${project.build.finalName}.jar"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>bnd-wrap-jar</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <!-- Set properties used by lz4-java.bnd -->
+                <property name="packages.version" value="${project.version}"/>
+                <property name="ivy.revision" value="${project.version}"/>
+
+                <!-- Define bnd ant task from plugin dependency -->
+                <taskdef resource="aQute/bnd/ant/taskdef.properties" classpathref="maven.plugin.classpath"/>
+
+                <!-- Wrap the plain jar into the final OSGi bundle -->
+                <bndwrap definitions="${project.basedir}"
+                         output="${project.build.directory}/${project.build.finalName}-wrapped.jar"
+                         trace="true">
+                  <fileset dir="${project.build.directory}" includes="${project.build.finalName}.jar"/>
+                </bndwrap>
+
+                <!-- Replace the original jar with the wrapped one (as in Ant: delete plain jar) -->
+                <delete file="${project.build.directory}/${project.build.finalName}.jar"/>
+                <move file="${project.build.directory}/${project.build.finalName}-wrapped.jar"
+                      tofile="${project.build.directory}/${project.build.finalName}.jar"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
