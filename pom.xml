@@ -41,10 +41,6 @@
     <!-- Paths -->
     <generated.sources.dir>${project.build.directory}/generated-sources/mvel</generated.sources.dir>
 
-    <!-- External tools versions to mirror Ant build -->
-    <mvel.version>2.5.2.Final</mvel.version>
-    <bnd.version>1.50.0</bnd.version>
-
     <!-- reproducible build -->
     <project.build.outputTimestamp>1980-01-01T00:00:02Z</project.build.outputTimestamp>
   </properties>
@@ -173,14 +169,14 @@
         <version>3.1.0</version>
         <dependencies>
           <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bnd</artifactId>
-            <version>${bnd.version}</version>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>biz.aQute.bnd.ant</artifactId>
+            <version>7.1.0</version>
           </dependency>
           <dependency>
             <groupId>org.mvel</groupId>
             <artifactId>mvel2</artifactId>
-            <version>${mvel.version}</version>
+            <version>2.5.2.Final</version>
           </dependency>
         </dependencies>
         <executions>
@@ -213,6 +209,7 @@
                 <property name="packages.version" value="${project.version}"/>
                 <property name="ivy.revision" value="${project.version}"/>
                 <property name="-noextraheaders" value="true"/>
+                <property name="-reproducible" value="true"/>
 
                 <!-- Define bnd ant task from plugin dependency -->
                 <taskdef resource="aQute/bnd/ant/taskdef.properties" classpathref="maven.plugin.classpath"/>
