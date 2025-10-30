@@ -212,6 +212,7 @@
                 <!-- Set properties used by lz4-java.bnd -->
                 <property name="packages.version" value="${project.version}"/>
                 <property name="ivy.revision" value="${project.version}"/>
+                <property name="-noextraheaders" value="true"/>
 
                 <!-- Define bnd ant task from plugin dependency -->
                 <taskdef resource="aQute/bnd/ant/taskdef.properties" classpathref="maven.plugin.classpath"/>
