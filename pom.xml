@@ -37,9 +37,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- Java 7 bytecode -->
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
 
     <!-- Paths -->
     <generated.sources.dir>${project.build.directory}/generated-sources/mvel</generated.sources.dir>
@@ -47,13 +44,28 @@
     <!-- External tools versions to mirror Ant build -->
     <mvel.version>2.3.2.Final</mvel.version>
     <bnd.version>1.50.0</bnd.version>
+
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
   <dependencies>
     <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <version>5.11.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>1.11.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -80,8 +92,6 @@
       </testResource>
     </testResources>
     <plugins>
-      <!-- Generate sources with MVEL (same as Ant target 'generate-sources') -->
-
       <!-- Add extra source directories: src/java-unsafe and generated sources -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -104,7 +114,6 @@
         </executions>
       </plugin>
 
-      <!-- Select JDK via Maven Toolchains (default: JDK 8) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-toolchains-plugin</artifactId>
@@ -136,7 +145,6 @@
           <target>${maven.compiler.target}</target>
           <encoding>${project.build.sourceEncoding}</encoding>
           <debug>true</debug>
-          <!-- Let the Toolchains plugin provide the JDK (default JDK 8, optional JDK 7 profile) -->
           <fork>true</fork>
         </configuration>
       </plugin>
@@ -155,7 +163,6 @@
         </configuration>
       </plugin>
 
-      <!-- Wrap jar as OSGi bundle with bnd 1.50.0 using lz4-java.bnd (mirrors Ant 'bundle' target) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -173,6 +180,7 @@
           </dependency>
         </dependencies>
         <executions>
+          <!-- Use MVEL2 to generate sources -->
           <execution>
             <id>mvel-generate-sources</id>
             <phase>generate-sources</phase>
@@ -194,53 +202,7 @@
               <goal>run</goal>
             </goals>
           </execution>
-          <execution>
-            <id>fetch-natives-ant</id>
-            <phase>process-resources</phase>
-            <configuration>
-              <target>
-                <mkdir dir="${project.build.directory}/official"/>
-                <get src="https://repo1.maven.org/maven2/org/lz4/lz4-java/1.8.0/lz4-java-1.8.0.jar"
-                     dest="${project.build.directory}/lz4-java-1.8.0-official.jar"/>
-                <unzip src="${project.build.directory}/lz4-java-1.8.0-official.jar"
-                       dest="${project.build.directory}/official">
-                  <patternset>
-                    <include name="net/jpountz/util/**/*.so"/>
-                    <include name="net/jpountz/util/**/*.dll"/>
-                    <include name="net/jpountz/util/**/*.dylib"/>
-                    <include name="net/jpountz/util/**/*.jnilib"/>
-                  </patternset>
-                </unzip>
-                <copy todir="${project.build.outputDirectory}">
-                  <fileset dir="${project.build.directory}/official">
-                    <include name="net/jpountz/util/**/*.so"/>
-                    <include name="net/jpountz/util/**/*.dll"/>
-                    <include name="net/jpountz/util/**/*.dylib"/>
-                    <include name="net/jpountz/util/**/*.jnilib"/>
-                  </fileset>
-                </copy>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>strip-maven-descriptor</id>
-            <phase>package</phase>
-            <configuration>
-              <target>
-                <zip destfile="${project.build.directory}/${project.build.finalName}-nomaven.jar">
-                  <zipfileset src="${project.build.directory}/${project.build.finalName}.jar" excludes="META-INF/maven/**"/>
-                </zip>
-                <delete file="${project.build.directory}/${project.build.finalName}.jar"/>
-                <move file="${project.build.directory}/${project.build.finalName}-nomaven.jar" tofile="${project.build.directory}/${project.build.finalName}.jar"/>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
+          <!-- Use bndwrap for OSGi stuff that I don't understand. Could probably use maven-bundle-plugin here... -->
           <execution>
             <id>bnd-wrap-jar</id>
             <phase>package</phase>
@@ -280,9 +242,6 @@
           <jdkToolchain>
             <version>8</version>
           </jdkToolchain>
-          <!-- Enable assertions like Ant: enable for lz4 and xxhash packages -->
-          <argLine>-ea:net.jpountz.lz4 -ea:net.jpountz.xxhash</argLine>
-          <!-- Default includes **/*Test.java; matches this project -->
         </configuration>
       </plugin>
     </plugins>

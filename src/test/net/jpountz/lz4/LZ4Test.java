@@ -311,12 +311,12 @@ public class LZ4Test extends AbstractLZ4Test {
 
   public void testRoundTrip(byte[] data, int off, int len) {
     for (LZ4Factory compressorFactory : Arrays.asList(
-        LZ4Factory.nativeInstance(),
-        LZ4Factory.unsafeInstance(),
+        LZ4Factory.nativeInsecureInstance(),
+        LZ4Factory.unsafeInsecureInstance(),
         LZ4Factory.safeInstance())) {
       for (LZ4Factory decompressorFactory : Arrays.asList(
-          LZ4Factory.nativeInstance(),
-          LZ4Factory.unsafeInstance(),
+          LZ4Factory.nativeInsecureInstance(),
+          LZ4Factory.unsafeInsecureInstance(),
           LZ4Factory.safeInstance())) {
 	testRoundTrip(data, off, len, compressorFactory, decompressorFactory);
       }
