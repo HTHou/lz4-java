@@ -48,16 +48,16 @@ jobs:
           submodules: true
           fetch-depth: 0
 
+      - name: Setup Java 7 (Zulu) and write toolchains
+        id: java7-linux
+        uses: ./.github/actions/setup-java7-zulu
+
       - name: Setup Temurin JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
-
-      - name: Setup Java 7 (Zulu) and write toolchains
-        id: java7-linux
-        uses: ./.github/actions/setup-java7-zulu
 
 
       - name: Install cross toolchain (if needed)
@@ -109,16 +109,16 @@ jobs:
           submodules: true
           fetch-depth: 0
 
+      - name: Setup Java 7 (Zulu) and write toolchains
+        id: java7-macos
+        uses: ./.github/actions/setup-java7-zulu
+
       - name: Setup Temurin JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
-
-      - name: Setup Java 7 (Zulu) and write toolchains
-        id: java7-macos
-        uses: ./.github/actions/setup-java7-zulu
 
 
       - name: Build (mvn package)
@@ -191,16 +191,16 @@ jobs:
           submodules: true
           fetch-depth: 0
 
+      - name: Setup Java 7 (Zulu) and write toolchains
+        id: java7
+        uses: ./.github/actions/setup-java7-zulu
+
       - name: Setup Temurin JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
-
-      - name: Setup Java 7 (Zulu) and write toolchains
-        id: java7
-        uses: ./.github/actions/setup-java7-zulu
 
 
       - name: Download natives (linux)
