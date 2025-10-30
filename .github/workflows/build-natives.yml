@@ -3,7 +3,7 @@ name: Build Natives and Assemble All-Platforms Jar
 
 on:
   push:
-    branches: [ main, workflow ]
+    branches: [ main ]
     tags: [ 'v*' ]
   pull_request:
 
