@@ -66,7 +66,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ${{ matrix.apt }}
 
-      - name: Build (mvn package)
+      - name: Build (mvn verify on native linux/amd64)
+        if: ${{ matrix.arch == 'amd64' }}
+        run: |
+          ./mvnw -B -V \
+            -Darch.id=${{ matrix.arch }} \
+            -Dnative.cc=${{ matrix.cc }} \
+            "-Dnative.cflags=${{ matrix.cflags }}" \
+            "-Dnative.ldflags=${{ matrix.ldflags }}" \
+            verify
+
+      - name: Build (mvn package on cross-compiled linux arches)
+        if: ${{ matrix.arch != 'amd64' }}
         run: |
           ./mvnw -B -V -DskipTests \
             -Darch.id=${{ matrix.arch }} \
@@ -125,13 +136,13 @@ jobs:
             -Dnative.cc=cc \
             process-resources
 
-      - name: Build (mvn package)
+      - name: Build (mvn verify on macos-13)
         if: ${{ matrix.os != 'macos-14' }}
         run: |
-          ./mvnw -B -V -DskipTests \
+          ./mvnw -B -V \
             -Darch.id=${{ matrix.arch }} \
             -Dnative.cc=cc \
-            package
+            verify
 
       - name: Upload native library
         uses: actions/upload-artifact@v4
@@ -170,13 +181,13 @@ jobs:
           cache: maven
 
 
-      - name: Build (mvn package) using MSYS2 shell
+      - name: Build (mvn verify) using MSYS2 shell
         shell: msys2 {0}
         run: |
-          ./mvnw -B -V -DskipTests \
+          ./mvnw -B -V \
             -Darch.id=amd64 \
             -Dnative.cc=gcc \
-            package
+            verify
 
       - name: Upload native library
         uses: actions/upload-artifact@v4
@@ -247,8 +258,8 @@ jobs:
           find src/resources/net -maxdepth 3 -type f -print
 
 
-      - name: Build with Maven (tests + package) consuming staged natives
-        run: ./mvnw -B -V test package
+      - name: Build with Maven (verify) consuming staged natives
+        run: ./mvnw -B -V verify
 
       - name: Upload final JAR
         uses: actions/upload-artifact@v4
