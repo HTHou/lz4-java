@@ -45,9 +45,6 @@
     <mvel.version>2.5.2.Final</mvel.version>
     <bnd.version>1.50.0</bnd.version>
 
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
-
     <!-- reproducible build -->
     <project.build.outputTimestamp>1980-01-01T00:00:02Z</project.build.outputTimestamp>
   </properties>
@@ -117,39 +114,43 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-toolchains-plugin</artifactId>
-        <version>3.0.0</version>
-        <executions>
-          <execution>
-            <id>select-jdk7-toolchain</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>toolchain</goal>
-            </goals>
-            <configuration>
-              <toolchains>
-                <jdk>
-                  <version>[7,8)</version>
-                </jdk>
-              </toolchains>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
 
       <!-- Compile to Java 7 bytecode with debug info, match Ant javac settings -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.11.0</version>
-        <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
-          <encoding>${project.build.sourceEncoding}</encoding>
-          <debug>true</debug>
-          <fork>true</fork>
-        </configuration>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <source>1.7</source>
+              <target>1.7</target>
+              <encoding>${project.build.sourceEncoding}</encoding>
+              <debug>true</debug>
+              <fork>true</fork>
+              <jdkToolchain>
+                <version>7</version>
+              </jdkToolchain>
+            </configuration>
+          </execution>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <release>21</release>
+              <encoding>${project.build.sourceEncoding}</encoding>
+              <debug>true</debug>
+              <fork>true</fork>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
       <!-- Produce initial jar with Automatic-Module-Name header -->
@@ -238,11 +239,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
-        <configuration>
-          <jdkToolchain>
-            <version>8</version>
-          </jdkToolchain>
-        </configuration>
       </plugin>
     </plugins>
   </build>
