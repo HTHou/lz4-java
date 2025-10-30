@@ -63,7 +63,7 @@ jobs:
 
       - name: Build (mvn package)
         run: |
-          ./mvnw -B -V -DskipTests \
+          ./mvnw -B -V -DskipTests -Dmaven.compiler.skip=true \
             -Darch.id=${{ matrix.arch }} \
             -Dnative.cc=${{ matrix.cc }} \
             "-Dnative.cflags=${{ matrix.cflags }}" \
@@ -113,7 +113,7 @@ jobs:
 
       - name: Build (mvn package)
         run: |
-          ./mvnw -B -V -DskipTests \
+          ./mvnw -B -V -DskipTests -Dmaven.compiler.skip=true \
             -Darch.id=${{ matrix.arch }} \
             -Dnative.cc=cc \
             package
@@ -153,7 +153,7 @@ jobs:
       - name: Build (mvn package) using MSYS2 shell
         shell: msys2 {0}
         run: |
-          ./mvnw -B -V -DskipTests \
+          ./mvnw -B -V -DskipTests -Dmaven.compiler.skip=true \
             -Darch.id=amd64 \
             -Dnative.cc=gcc \
             package
@@ -176,6 +176,32 @@ jobs:
           submodules: true
           fetch-depth: 0
 
+      - name: Setup Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Setup Java 7 (SDKMAN)
+        id: java7
+        uses: ./.github/actions/setup-java7-sdkman
+
+      - name: Write Maven toolchains.xml (JDK 7)
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.m2"
+          cat > "$HOME/.m2/toolchains.xml" <<'XML'
+          <toolchains>
+            <toolchain>
+              <type>jdk</type>
+              <provides><version>7</version></provides>
+              <configuration>
+                <jdkHome>${{ steps.java7.outputs.java7_home }}</jdkHome>
+              </configuration>
+            </toolchain>
+          </toolchains>
+          XML
 
       - name: Download natives (linux)
         uses: actions/download-artifact@v4
