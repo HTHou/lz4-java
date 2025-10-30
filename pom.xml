@@ -42,11 +42,14 @@
     <generated.sources.dir>${project.build.directory}/generated-sources/mvel</generated.sources.dir>
 
     <!-- External tools versions to mirror Ant build -->
-    <mvel.version>2.3.2.Final</mvel.version>
+    <mvel.version>2.5.2.Final</mvel.version>
     <bnd.version>1.50.0</bnd.version>
 
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
+
+    <!-- reproducible build -->
+    <project.build.outputTimestamp>1980-01-01T00:00:02Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>
@@ -188,10 +191,7 @@
               <target>
                 <property name="out.dir" value="${generated.sources.dir}"/>
                 <property environment="env"/>
-                <condition property="java8.jvm" value="${env.JAVA8_HOME}/bin/java">
-                  <isset property="env.JAVA8_HOME"/>
-                </condition>
-                <java classname="org.mvel2.sh.Main" dir="${project.basedir}/src/build/source_templates" fork="true" failonerror="true" jvm="${java8.jvm}">
+                <java classname="org.mvel2.sh.Main" dir="${project.basedir}/src/build/source_templates" fork="true" failonerror="true">
                   <sysproperty key="out.dir" value="${generated.sources.dir}"/>
                   <classpath refid="maven.plugin.classpath"/>
                   <arg value="${project.basedir}/src/build/gen_sources.mvel"/>
