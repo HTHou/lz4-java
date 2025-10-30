@@ -168,6 +168,7 @@ jobs:
           install: >-
             base-devel
             mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-lz4
 
       - name: Setup Java 7 (Zulu) and write toolchains
         uses: ./.github/actions/setup-java7-zulu

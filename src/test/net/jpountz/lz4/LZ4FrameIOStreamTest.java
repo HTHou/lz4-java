@@ -480,9 +480,14 @@ public class LZ4FrameIOStreamTest {
   }
 
   private static boolean hasNativeLz4CLI() throws IOException, InterruptedException {
-    ProcessBuilder checkBuilder = new ProcessBuilder().command("lz4", "-V").inheritIO();
-    Process checkProcess = checkBuilder.start();
-    return checkProcess.waitFor() == 0;
+    try {
+      ProcessBuilder checkBuilder = new ProcessBuilder().command("lz4", "-V").redirectErrorStream(true);
+      Process checkProcess = checkBuilder.start();
+      return checkProcess.waitFor() == 0;
+    } catch (IOException | InterruptedException e) {
+      // lz4 CLI not available or failed to execute; treat as unavailable to allow test skip
+      return false;
+    }
   }
 
   @Test
