@@ -1,0 +1,28 @@
+name: Setup Java 7 (Zulu) and write toolchains
+description: Installs Zulu JDK 7 via actions/setup-java and writes ~/.m2/toolchains.xml for Maven toolchain version 7
+runs:
+  using: composite
+  steps:
+    - name: Install Zulu JDK 7
+      uses: actions/setup-java@v4
+      with:
+        distribution: zulu
+        java-version: '7'
+        cache: maven
+
+    - name: Write Maven toolchains.xml (JDK 7)
+      shell: bash
+      run: |
+        mkdir -p "$HOME/.m2"
+        # JAVA_HOME is set by actions/setup-java in the previous step
+        cat > "$HOME/.m2/toolchains.xml" <<XML
+        <toolchains>
+          <toolchain>
+            <type>jdk</type>
+            <provides><version>7</version></provides>
+            <configuration>
+              <jdkHome>${JAVA_HOME}</jdkHome>
+            </configuration>
+          </toolchain>
+        </toolchains>
+        XML
