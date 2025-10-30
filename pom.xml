@@ -282,7 +282,7 @@
 
                     <!-- Toolchain overrides come from Maven properties: ${native.cc}, ${native.cflags}, ${native.ldflags} -->
 
-                    <mkdir dir="${project.build.outputDirectory}/net/jpountz/util/$${os.id}/$${arch.id}"/>
+                    <mkdir dir="${project.build.outputDirectory}/net/jpountz/util/${os.id}/${arch.id}"/>
                     <exec executable="${native.cc}" failonerror="true">
                       <arg value="-O3"/>
                       <arg value="-fPIC"/>
@@ -298,7 +298,7 @@
                       <arg value="${project.basedir}/src/lz4/lib/xxhash.c"/>
                       <arg line="${native.ldflags}"/>
                       <arg value="-o"/>
-                      <arg value="${project.build.outputDirectory}/net/jpountz/util/$${os.id}/$${arch.id}/liblz4-java.$${lib.ext}"/>
+                      <arg value="${project.build.outputDirectory}/net/jpountz/util/${os.id}/${arch.id}/liblz4-java.${lib.ext}"/>
                     </exec>
                   </target>
                 </configuration>
@@ -342,7 +342,7 @@
 
                     <!-- Toolchain overrides come from Maven properties: ${native.cc}, ${native.cflags}, ${native.ldflags} -->
 
-                    <mkdir dir="${project.build.outputDirectory}/net/jpountz/util/$${os.id}/$${arch.id}"/>
+                    <mkdir dir="${project.build.outputDirectory}/net/jpountz/util/${os.id}/${arch.id}"/>
                     <exec executable="${native.cc}" failonerror="true">
                       <arg value="-O3"/>
                       <arg value="-fPIC"/>
@@ -359,7 +359,7 @@
                       <arg value="${project.basedir}/src/lz4/lib/xxhash.c"/>
                       <arg line="${native.ldflags}"/>
                       <arg value="-o"/>
-                      <arg value="${project.build.outputDirectory}/net/jpountz/util/$${os.id}/$${arch.id}/liblz4-java.$${lib.ext}"/>
+                      <arg value="${project.build.outputDirectory}/net/jpountz/util/${os.id}/${arch.id}/liblz4-java.${lib.ext}"/>
                     </exec>
                   </target>
                 </configuration>
@@ -404,7 +404,7 @@
 
                     <!-- Toolchain overrides come from Maven properties: ${native.cc}, ${native.cflags}, ${native.ldflags} -->
 
-                    <mkdir dir="${project.build.outputDirectory}/net/jpountz/util/$${os.id}/$${arch.id}"/>
+                    <mkdir dir="${project.build.outputDirectory}/net/jpountz/util/${os.id}/${arch.id}"/>
                     <exec executable="${native.cc}" failonerror="true">
                       <arg value="-O3"/>
                       <arg value="-shared"/>
@@ -419,7 +419,7 @@
                       <arg value="${project.basedir}/src/lz4/lib/xxhash.c"/>
                       <arg line="${native.ldflags}"/>
                       <arg value="-o"/>
-                      <arg value="${project.build.outputDirectory}/net/jpountz/util/$${os.id}/$${arch.id}/liblz4-java.$${lib.ext}"/>
+                      <arg value="${project.build.outputDirectory}/net/jpountz/util/${os.id}/${arch.id}/liblz4-java.${lib.ext}"/>
                     </exec>
                   </target>
                 </configuration>
