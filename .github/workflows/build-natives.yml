@@ -90,7 +90,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: natives-linux-${{ matrix.arch }}
-          path: target/classes/net/jpountz/util/linux/${{ matrix.arch }}/liblz4-java.so
+          path: target/classes/net/jpountz/util/linux/*/liblz4-java.so
           if-no-files-found: error
 
 
@@ -102,7 +102,7 @@ jobs:
       matrix:
         include:
           - os: macos-13
-            arch: amd64
+            arch: x86_64
             java7: true
           - os: macos-14
             arch: aarch64

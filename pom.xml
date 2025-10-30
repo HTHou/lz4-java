@@ -270,7 +270,7 @@
 
                     <!-- Arch mapping (overridable via -Darch.id) -->
                     <property name="arch.id" value="${os.arch}"/>
-                    <condition property="arch.id" value="amd64">
+                    <condition property="arch.id" value="x86_64">
                       <matches pattern="^(x86_64|amd64|AMD64)$" string="${arch.id}"/>
                     </condition>
                     <condition property="arch.id" value="aarch64">
@@ -333,7 +333,7 @@
 
                     <!-- Arch mapping (overridable via -Darch.id) -->
                     <property name="arch.id" value="${os.arch}"/>
-                    <condition property="arch.id" value="amd64">
+                    <condition property="arch.id" value="x86_64">
                       <matches pattern="^(x86_64|amd64|AMD64)$" string="${arch.id}"/>
                     </condition>
                     <condition property="arch.id" value="aarch64">
