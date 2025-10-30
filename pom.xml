@@ -160,7 +160,6 @@
         <version>3.4.1</version>
         <configuration>
           <archive>
-            <addMavenDescriptor>false</addMavenDescriptor>
             <manifestEntries>
               <Automatic-Module-Name>org.lz4.java</Automatic-Module-Name>
             </manifestEntries>
