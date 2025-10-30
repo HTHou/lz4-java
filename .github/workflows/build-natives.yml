@@ -75,20 +75,13 @@ jobs:
             "-Dnative.ldflags=${{ matrix.ldflags }}" \
             package
 
-      - name: Upload native library (directory with correct in-jar path)
+      - name: Upload native library
         uses: actions/upload-artifact@v4
         with:
           name: natives-linux-${{ matrix.arch }}
-          path: target/classes/net
+          path: target/classes/net/jpountz/util/linux/${{ matrix.arch }}/liblz4-java.so
           if-no-files-found: error
 
-      - name: Upload base jar (linux/amd64 only)
-        if: ${{ matrix.arch == 'amd64' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: base-jar
-          path: target/lz4-java-*.jar
-          if-no-files-found: error
 
   macos:
     name: macOS natives (${{ matrix.os }} - ${{ matrix.arch }})
@@ -98,9 +91,11 @@ jobs:
       matrix:
         include:
           - os: macos-13
-            arch: amd64   # x86_64
+            arch: amd64
+            java7: true
           - os: macos-14
-            arch: aarch64 # arm64
+            arch: aarch64
+            java7: false
 
     steps:
       - name: Checkout
@@ -110,6 +105,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Java 7 (Zulu) and write toolchains
+        if: ${{ matrix.java7 }}
         id: java7-macos
         uses: ./.github/actions/setup-java7-zulu
 
@@ -121,18 +117,27 @@ jobs:
           cache: maven
 
 
+      - name: Build (process-resources only on macos-14)
+        if: ${{ matrix.os == 'macos-14' }}
+        run: |
+          ./mvnw -B -V -DskipTests \
+            -Darch.id=${{ matrix.arch }} \
+            -Dnative.cc=cc \
+            process-resources
+
       - name: Build (mvn package)
+        if: ${{ matrix.os != 'macos-14' }}
         run: |
           ./mvnw -B -V -DskipTests \
             -Darch.id=${{ matrix.arch }} \
             -Dnative.cc=cc \
             package
 
-      - name: Upload native library (directory with correct in-jar path)
+      - name: Upload native library
         uses: actions/upload-artifact@v4
         with:
           name: natives-darwin-${{ matrix.arch }}
-          path: target/classes/net
+          path: target/classes/net/jpountz/util/darwin/${{ matrix.arch }}/liblz4-java.dylib
           if-no-files-found: error
 
   windows:
@@ -173,11 +178,11 @@ jobs:
             -Dnative.cc=gcc \
             package
 
-      - name: Upload native library (directory with correct in-jar path)
+      - name: Upload native library
         uses: actions/upload-artifact@v4
         with:
           name: natives-win32-amd64
-          path: target/classes/net
+          path: target/classes/net/jpountz/util/win32/amd64/liblz4-java.so
           if-no-files-found: error
 
   assemble:
@@ -203,20 +208,40 @@ jobs:
           cache: maven
 
 
-      - name: Download natives (linux)
+      - name: Download natives
         uses: actions/download-artifact@v4
         with:
           path: assemble/natives
       # Note: downloads all artifacts; we will merge their folder contents
 
       - name: Prepare src/resources with collected natives
+        shell: bash
         run: |
           rm -rf src/resources/net/jpountz/util || true
-          mkdir -p src/resources/net
-          # Merge all downloaded artifacts into a single src/resources/net tree
-          # Each artifact contains net/jpountz/util/<os>/<arch>/liblz4-java.{ext}
-          find assemble/natives -type d -name net -print0 | while IFS= read -r -d '' d; do
-            rsync -a "$d"/ src/resources/net/
+          shopt -s nullglob
+          for dir in assemble/natives/*; do
+            base="$(basename "$dir")"
+            # Expect names like natives-linux-amd64, natives-darwin-aarch64, natives-win32-amd64
+            os="${base#natives-}"
+            arch="${os#*-}"; os="${os%%-*}"
+            case "$os" in
+              linux) ext=so ;;
+              darwin) ext=dylib ;;
+              win32) ext=so ;;
+              *) echo "Unknown OS in artifact: $base" >&2; continue ;;
+            esac
+            dest="src/resources/net/jpountz/util/$os/$arch"
+            mkdir -p "$dest"
+            if [ -f "$dir/liblz4-java.$ext" ]; then
+              cp -f "$dir/liblz4-java.$ext" "$dest/"
+            else
+              found="$(find "$dir" -type f -name "liblz4-java.$ext" | head -n1)"
+              if [ -n "$found" ]; then
+                cp -f "$found" "$dest/"
+              else
+                echo "No lib found in $dir" >&2
+              fi
+            fi
           done
           echo "Contents of src/resources/net:"
           find src/resources/net -maxdepth 3 -type f -print
