@@ -9,20 +9,3 @@ runs:
         distribution: zulu
         java-version: '7'
         cache: maven
-
-    - name: Write Maven toolchains.xml (JDK 7)
-      shell: bash
-      run: |
-        mkdir -p "$HOME/.m2"
-        # JAVA_HOME is set by actions/setup-java in the previous step
-        cat > "$HOME/.m2/toolchains.xml" <<XML
-        <toolchains>
-          <toolchain>
-            <type>jdk</type>
-            <provides><version>7</version></provides>
-            <configuration>
-              <jdkHome>${JAVA_HOME}</jdkHome>
-            </configuration>
-          </toolchain>
-        </toolchains>
-        XML
