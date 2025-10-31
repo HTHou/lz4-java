@@ -51,12 +51,16 @@ Fuzz tests are implemented using the jazzer junit integration. Some tips:
 `consumeRemainingBytes`, or `consumeBytes` until some pre-defined delimiter. This makes input mutation work better.
 - When there are multiple implementations to test, e.g. JNI vs Unsafe vs Safe, or fast decompressor vs safe 
 decompressor, or high compression vs fast compression, DO NOT use loops to test them all at once. Instead, create a 
-separate fuzz test for each implementation, as fine-grained as possible.
+separate fuzz test for each implementation, as fine-grained as possible. If there are many combinations, create a 
+separate fuzz test for each combination.
+- DO NOT use round-trip testing for fuzz tests. All APIs can be fed with untrusted data and must handle it properly.
+For example, feed decompressors with fuzzing data directly, rather than output of a compressor run. If the decompressor
+throws a normal recoverable exception (e.g. LZ4Exception), the fuzz test should just ignore the failure.
 - Make sure to use the right `LZ4Factory` methods as described in the unit testing section.
 - Each fuzz test MUST have its own test execution in the pom fuzz profile so that it runs independently.
 - When running fuzz tests as part of normal development, limit the jazzer.max_duration to 5s so that you don't spend 
 too much time, unless requested to run them for longer.
-- When you encounter a fuzzer failure that is *not* a normal recoverable exception (e.g. LZ4Exception, 
-ArrayIndexOutOfBoundsException), you MUST treat this as a legitimate failure. In particular, segmentation faults,
-UnsafeSanitizer failures, and other sanitizer failures are real. You MUST NOT attempt to alter the fuzz test to make 
-them disappear.
+- When you encounter a fuzzer failure that is *not* an LZ4Exception, you MUST treat this as a legitimate failure. In 
+particular, segmentation faults, UnsafeSanitizer failures, and other sanitizer failures are real. You MUST NOT attempt 
+to alter the fuzz test to make them disappear. You MAY disable failing fuzz tests and mark them with a TODO comment.
+- When testing APIs that take ByteBuffers, test using direct buffers instead of heap buffers.

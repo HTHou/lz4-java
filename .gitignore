@@ -10,3 +10,4 @@ out
 # New with maven migration
 target/
 *.iml
+.cifuzz-corpus/
