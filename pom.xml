@@ -54,7 +54,7 @@
     <dependency>
       <groupId>org.junit.vintage</groupId>
       <artifactId>junit-vintage-engine</artifactId>
-      <version>5.11.3</version>
+      <version>5.9.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -66,13 +66,37 @@
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-launcher</artifactId>
-      <version>1.11.3</version>
+      <version>1.9.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-commons</artifactId>
+      <version>1.9.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.carrotsearch.randomizedtesting</groupId>
       <artifactId>randomizedtesting-runner</artifactId>
       <version>2.7.7</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.code-intelligence</groupId>
+      <artifactId>jazzer-junit</artifactId>
+      <version>0.26.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>5.9.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.9.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -424,6 +448,68 @@
                 </configuration>
                 <goals><goal>run</goal></goals>
               </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>fuzz</id>
+      <properties>
+        <native.cc>clang</native.cc>
+        <native.cflags>-O1 -g -fPIC -fno-omit-frame-pointer</native.cflags>
+        <native.ldflags></native.ldflags>
+        <jazzer.max_duration>5s</jazzer.max_duration>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>detect-asan-runtime</id>
+                <phase>validate</phase>
+                <configuration>
+                  <exportAntProperties>true</exportAntProperties>
+                  <target>
+                    <exec executable="clang" outputproperty="clang.resource.dir">
+                      <arg value="-print-resource-dir"/>
+                    </exec>
+                    <property name="clang.asan.lib" value="${clang.resource.dir}/lib/linux"/>
+                  </target>
+                </configuration>
+                <goals><goal>run</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.5</version>
+            <configuration>
+              <skipTests>true</skipTests>
+              <systemPropertyVariables>
+                <!-- Limit each Jazzer @FuzzTest to the configured duration -->
+                <jazzer.max_duration>${jazzer.max_duration}</jazzer.max_duration>
+              </systemPropertyVariables>
+              <environmentVariables>
+                <JAZZER_FUZZ>1</JAZZER_FUZZ>
+                <ASAN_OPTIONS>detect_leaks=1,abort_on_error=1,fast_unwind_on_malloc=0</ASAN_OPTIONS>
+                <LD_LIBRARY_PATH>${clang.asan.lib}:${env.LD_LIBRARY_PATH}</LD_LIBRARY_PATH>
+              </environmentVariables>
+            </configuration>
+            <executions>
+              <!-- example:
+              <execution>
+                <id>fuzz-net.jpountz.fuzz.LZ4ArrayFuzzTest#fuzz_safe_java_fast</id>
+                <goals><goal>test</goal></goals>
+                <configuration>
+                  <skipTests>false</skipTests>
+                  <test>net.jpountz.fuzz.LZ4ArrayFuzzTest#fuzz_safe_java_fast</test>
+                </configuration>
+              </execution> -->
             </executions>
           </plugin>
         </plugins>
