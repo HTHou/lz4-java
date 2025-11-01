@@ -45,7 +45,11 @@
       return 1;
     }
 
+  @if{ storage == "ByteBuffer"}
+    final int srcEnd = src.capacity();
+  @else{}
     final int srcEnd = src.length;
+  @end{}
 @end{}
 
     final int destEnd = destOff + destLen;
