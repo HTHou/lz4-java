@@ -16,11 +16,14 @@ package net.jpountz.lz4;
  * limitations under the License.
  */
 
+import java.nio.ByteOrder;
+
 import static net.jpountz.lz4.LZ4Constants.COPY_LENGTH;
 import static net.jpountz.lz4.LZ4Constants.LAST_LITERALS;
 import static net.jpountz.lz4.LZ4Constants.ML_BITS;
 import static net.jpountz.lz4.LZ4Constants.ML_MASK;
 import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
+import static net.jpountz.lz4.LZ4Utils.lengthOfEncodedInteger;
 import static net.jpountz.util.UnsafeUtils.readByte;
 import static net.jpountz.util.UnsafeUtils.readInt;
 import static net.jpountz.util.UnsafeUtils.readLong;
@@ -30,8 +33,6 @@ import static net.jpountz.util.UnsafeUtils.writeInt;
 import static net.jpountz.util.UnsafeUtils.writeLong;
 import static net.jpountz.util.UnsafeUtils.writeShort;
 import static net.jpountz.util.Utils.NATIVE_BYTE_ORDER;
-
-import java.nio.ByteOrder;
 
 enum LZ4UnsafeUtils {
   ;
@@ -157,6 +158,12 @@ enum LZ4UnsafeUtils {
 
   static int encodeSequence(byte[] src, int anchor, int matchOff, int matchRef, int matchLen, byte[] dest, int dOff, int destEnd) {
     final int runLen = matchOff - anchor;
+    matchLen -= 4;
+
+    if (dOff + 1 + lengthOfEncodedInteger(runLen) + runLen + 2 + lengthOfEncodedInteger(matchLen) > destEnd - 1 - LAST_LITERALS) {
+      throw new LZ4Exception("maxDestLen is too small");
+    }
+
     final int tokenOff = dOff++;
     int token;
 
@@ -177,10 +184,6 @@ enum LZ4UnsafeUtils {
     dest[dOff++] = (byte) (matchDec >>> 8);
 
     // encode match len
-    matchLen -= 4;
-    if (dOff + (1 + LAST_LITERALS) + (matchLen >>> 8) > destEnd) {
-      throw new LZ4Exception("maxDestLen is too small");
-    }
     if (matchLen >= ML_MASK) {
       token |= ML_MASK;
       dOff = writeLen(matchLen - RUN_MASK, dest, dOff);

@@ -19,12 +19,7 @@ package net.jpountz.lz4;
 import static net.jpountz.lz4.LZ4Constants.HASH_LOG;
 import static net.jpountz.lz4.LZ4Constants.HASH_LOG_64K;
 import static net.jpountz.lz4.LZ4Constants.HASH_LOG_HC;
-import static net.jpountz.lz4.LZ4Constants.LAST_LITERALS;
 import static net.jpountz.lz4.LZ4Constants.MIN_MATCH;
-import static net.jpountz.lz4.LZ4Constants.ML_BITS;
-import static net.jpountz.lz4.LZ4Constants.ML_MASK;
-import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
-import net.jpountz.util.SafeUtils;
 
 enum LZ4Utils {
   ;
@@ -38,6 +33,19 @@ enum LZ4Utils {
         throw new IllegalArgumentException("length must be < " + MAX_INPUT_SIZE);
     }
     return length + length / 255 + 16;
+  }
+
+  /**
+   * The LZ4 format uses two integers per sequence, encoded in a special format: 4 bits in a shared "token" byte, and
+   * then possibly multiple additional bytes. This method returns the number of bytes used to encode a particular
+   * value, excluding the 4 shared bits.
+   */
+  static int lengthOfEncodedInteger(int value) {
+    if (value >= 15) {
+      return ((value - 15) >>> 8) + 1;
+    } else {
+      return 0;
+    }
   }
 
   static int hash(int i) {
