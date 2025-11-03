@@ -246,15 +246,19 @@ async def run_job(
     env["JAZZER_FLAGS"] = f"-rss_limit_mb={rss_limit_mb}"
 
     # Prepare isolated working copy per job to eliminate cross-run interference
-    work_dir = (result.build_dir.parent if result.build_dir.name == "target" else result.build_dir.parent)  # placeholder; will reset result dirs below
-    work_dir = (Path(str(work_dir)) if isinstance(work_dir, Path) else Path(work_dir))
-    # Create a clean work directory under the job folder
     job_root = Path(str(result.log_path)).parent  # job_dir
     work_dir = job_root / "work"
-    if not work_dir.exists():
-        def _ignore(dir, names):
-            return set(n for n in names if n in (".git", ".idea", "target", "fuzz-out")) or {n for n in names if n.startswith("hs_err_pid") or n.startswith("crash-")}
-        shutil.copytree(str(base_dir), str(work_dir), ignore=_ignore)
+
+    # Always refresh from the current repository state so changes are visible in isolated runs
+    def _ignore(src_dir, names):
+        ignored = {n for n in names if n in (".git", ".idea", "target", "fuzz-out")}
+        ignored |= {n for n in names if n.startswith("hs_err_pid") or n.startswith("crash-")}
+        return ignored
+
+    if work_dir.exists():
+        shutil.rmtree(work_dir)
+    shutil.copytree(str(base_dir), str(work_dir), ignore=_ignore)
+
     # Reset result directories to the isolated work dir target
     result.build_dir = work_dir / "target"
     result.surefire_report_dir = result.build_dir / "surefire-reports"
