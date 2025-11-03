@@ -52,6 +52,11 @@
     int dOff = destOff;
 
     while (true) {
+@if{ size == "Safe" }
+      if (sOff >= srcEnd) {
+        throw new LZ4Exception("Malformed input at " + sOff);
+      }
+@end{}
       final int token = ${utils}.readByte(src, sOff) & 0xFF;
       ++sOff;
 
