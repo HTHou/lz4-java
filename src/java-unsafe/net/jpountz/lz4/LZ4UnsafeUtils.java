@@ -167,9 +167,6 @@ enum LZ4UnsafeUtils {
     final int tokenOff = dOff++;
     int token;
 
-    if (dOff + runLen + (2 + 1 + LAST_LITERALS) + (runLen >>> 8) > destEnd) {
-      throw new LZ4Exception("maxDestLen is too small");
-    }
     if (runLen >= RUN_MASK) {
       token = (byte) (RUN_MASK << ML_BITS);
       dOff = writeLen(runLen - RUN_MASK, dest, dOff);
