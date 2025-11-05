@@ -160,7 +160,8 @@ enum LZ4UnsafeUtils {
     final int runLen = matchOff - anchor;
     matchLen -= 4;
 
-    if (dOff + 1 + lengthOfEncodedInteger(runLen) + runLen + 2 + lengthOfEncodedInteger(matchLen) > destEnd - 1 - LAST_LITERALS) {
+    int end = dOff + 1 + lengthOfEncodedInteger(runLen) + runLen + 2 + lengthOfEncodedInteger(matchLen);
+    if (end > destEnd - 1 - LAST_LITERALS) {
       throw new LZ4Exception("maxDestLen is too small");
     }
 
@@ -193,6 +194,7 @@ enum LZ4UnsafeUtils {
 
     dest[tokenOff] = (byte) token;
 
+    assert dOff == end;
     return dOff;
   }
 
