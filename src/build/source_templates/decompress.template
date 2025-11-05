@@ -43,6 +43,7 @@
     }
 @else{}
     if (destLen == 0) {
+      // Allow `srcLen > 1` despite just one byte being consumed since this 'fast' decompressor does not have to fully consume the src
       if (srcLen < 1 || ${utils}.readByte(src, srcOff) != 0) {
         throw new LZ4Exception("Malformed input at " + srcOff);
       }
