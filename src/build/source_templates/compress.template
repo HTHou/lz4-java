@@ -62,7 +62,7 @@
         // encode literal length
         int tokenOff = dOff++;
 
-        if (dOff + runLen + (2 + 1 + LAST_LITERALS) + (runLen >>> 8) > destEnd) {
+        if (dOff + runLen + (2 + 1 + LAST_LITERALS) + lengthOfEncodedInteger(runLen) > destEnd) {
           throw new LZ4Exception("maxDestLen is too small");
         }
 
@@ -86,7 +86,7 @@
           sOff += MIN_MATCH;
           ref += MIN_MATCH;
           final int matchLen = LZ4${utils}.commonBytes(src, ref, sOff, srcLimit);
-          if (dOff + (1 + LAST_LITERALS) + (matchLen >>> 8) > destEnd) {
+          if (dOff + (1 + LAST_LITERALS) + lengthOfEncodedInteger(matchLen) > destEnd) {
             throw new LZ4Exception("maxDestLen is too small");
           }
           sOff += matchLen;
@@ -193,7 +193,7 @@
       // encode literal length
       int tokenOff = dOff++;
 
-      if (dOff + runLen + (2 + 1 + LAST_LITERALS) + (runLen >>> 8) > destEnd) {
+      if (dOff + runLen + (2 + 1 + LAST_LITERALS) + lengthOfEncodedInteger(runLen) > destEnd) {
         throw new LZ4Exception("maxDestLen is too small");
       }
 
@@ -216,7 +216,7 @@
         // count nb matches
         sOff += MIN_MATCH;
         final int matchLen = LZ4${utils}.commonBytes(src, ref + MIN_MATCH, sOff, srcLimit);
-        if (dOff + (1 + LAST_LITERALS) + (matchLen >>> 8) > destEnd) {
+        if (dOff + (1 + LAST_LITERALS) + lengthOfEncodedInteger(matchLen) > destEnd) {
           throw new LZ4Exception("maxDestLen is too small");
         }
         sOff += matchLen;
