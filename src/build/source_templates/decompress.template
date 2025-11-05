@@ -44,6 +44,12 @@
       }
       return 1;
     }
+
+  @if{ storage == "ByteBuffer"}
+    final int srcEnd = src.capacity();
+  @else{}
+    final int srcEnd = src.length;
+  @end{}
 @end{}
 
     final int destEnd = destOff + destLen;
@@ -52,11 +58,9 @@
     int dOff = destOff;
 
     while (true) {
-@if{ size == "Safe" }
       if (sOff >= srcEnd) {
         throw new LZ4Exception("Malformed input at " + sOff);
       }
-@end{}
       final int token = ${utils}.readByte(src, sOff) & 0xFF;
       ++sOff;
 
@@ -64,19 +68,24 @@
       int literalLen = token >>> ML_BITS;
       if (literalLen == RUN_MASK) {
         byte len = (byte) 0xFF;
-        while (@if{ size == "Safe" }sOff < srcEnd &&@end{}(len = ${utils}.readByte(src, sOff++)) == (byte) 0xFF) {
+        while (sOff < srcEnd && (len = ${utils}.readByte(src, sOff++)) == (byte) 0xFF) {
           literalLen += 0xFF;
         }
         literalLen += len & 0xFF;
       }
 
       final int literalCopyEnd = dOff + literalLen;
+      if (literalCopyEnd < dOff) {
+        throw new LZ4Exception("Too large literalLen");
+      }
+
+      if (literalCopyEnd > destEnd - COPY_LENGTH || sOff > srcEnd - COPY_LENGTH - literalLen) {
 @if{ size == "Fast" }
-      if (literalCopyEnd > destEnd - COPY_LENGTH) {
         if (literalCopyEnd != destEnd) {
           throw new LZ4Exception("Malformed input at " + sOff);
+        } else if (sOff > srcEnd - literalLen) {
+          throw new LZ4Exception("Malformed input at " + sOff);
 @else{}
-      if (literalCopyEnd > destEnd - COPY_LENGTH || sOff + literalLen > srcEnd - COPY_LENGTH) {
         if (literalCopyEnd > destEnd) {
           throw new LZ4Exception();
         } else if (sOff + literalLen != srcEnd) {
@@ -106,7 +115,7 @@
       int matchLen = token & ML_MASK;
       if (matchLen == ML_MASK) {
         byte len = (byte) 0xFF;
-        while (@if{ size == "Safe" }sOff < srcEnd &&@end{}(len = ${utils}.readByte(src, sOff++)) == (byte) 0xFF) {
+        while (sOff < srcEnd && (len = ${utils}.readByte(src, sOff++)) == (byte) 0xFF) {
           matchLen += 0xFF;
         }
         matchLen += len & 0xFF;
@@ -114,6 +123,9 @@
       matchLen += MIN_MATCH;
 
       final int matchCopyEnd = dOff + matchLen;
+      if (matchCopyEnd < dOff) {
+        throw new LZ4Exception("Too large matchLen");
+      }
 
       if (matchCopyEnd > destEnd - COPY_LENGTH) {
         if (matchCopyEnd > destEnd) {

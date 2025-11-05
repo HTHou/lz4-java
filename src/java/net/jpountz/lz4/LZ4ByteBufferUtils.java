@@ -16,20 +16,21 @@ package net.jpountz.lz4;
  * limitations under the License.
  */
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 import static net.jpountz.lz4.LZ4Constants.COPY_LENGTH;
 import static net.jpountz.lz4.LZ4Constants.LAST_LITERALS;
 import static net.jpountz.lz4.LZ4Constants.ML_BITS;
 import static net.jpountz.lz4.LZ4Constants.ML_MASK;
 import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
+import static net.jpountz.lz4.LZ4Utils.sequenceLength;
 import static net.jpountz.util.ByteBufferUtils.readByte;
 import static net.jpountz.util.ByteBufferUtils.readInt;
 import static net.jpountz.util.ByteBufferUtils.readLong;
 import static net.jpountz.util.ByteBufferUtils.writeByte;
 import static net.jpountz.util.ByteBufferUtils.writeInt;
 import static net.jpountz.util.ByteBufferUtils.writeLong;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 enum LZ4ByteBufferUtils {
   ;
@@ -147,11 +148,13 @@ enum LZ4ByteBufferUtils {
 
   static int encodeSequence(ByteBuffer src, int anchor, int matchOff, int matchRef, int matchLen, ByteBuffer dest, int dOff, int destEnd) {
     final int runLen = matchOff - anchor;
-    final int tokenOff = dOff++;
+    matchLen -= 4;
 
-    if (dOff + runLen + (2 + 1 + LAST_LITERALS) + (runLen >>> 8) > destEnd) {
+    int end = dOff + sequenceLength(runLen, matchLen);
+    if (end > destEnd - 1 - LAST_LITERALS) {
       throw new LZ4Exception("maxDestLen is too small");
     }
+    final int tokenOff = dOff++;
 
     int token;
     if (runLen >= RUN_MASK) {
@@ -171,10 +174,6 @@ enum LZ4ByteBufferUtils {
     dest.put(dOff++, (byte) (matchDec >>> 8));
 
     // encode match len
-    matchLen -= 4;
-    if (dOff + (1 + LAST_LITERALS) + (matchLen >>> 8) > destEnd) {
-      throw new LZ4Exception("maxDestLen is too small");
-    }
     if (matchLen >= ML_MASK) {
       token |= ML_MASK;
       dOff = writeLen(matchLen - RUN_MASK, dest, dOff);
@@ -184,6 +183,7 @@ enum LZ4ByteBufferUtils {
 
     dest.put(tokenOff, (byte) token);
 
+    assert end == dOff;
     return dOff;
   }
 
