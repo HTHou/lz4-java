@@ -489,7 +489,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.2.5</version>
             <configuration>
-              <skipTests>true</skipTests>
+              <failIfNoTests>true</failIfNoTests>
               <systemPropertyVariables>
                 <!-- Limit each Jazzer @FuzzTest to the configured duration -->
                 <jazzer.max_duration>${jazzer.max_duration}</jazzer.max_duration>
@@ -501,11 +501,18 @@
               </environmentVariables>
             </configuration>
             <executions>
+              <!-- Skip regular unit tests -->
+              <execution>
+                <id>default-test</id>
+                <configuration>
+                  <skipTests>true</skipTests>
+                </configuration>
+              </execution>
+              <!-- Specify custom fuzz tests; each execution covers one fuzz test method -->
               <execution>
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#safe_safe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#safe_safe_array</test>
                 </configuration>
               </execution>
@@ -513,7 +520,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#safe_fast_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#safe_fast_array</test>
                 </configuration>
               </execution>
@@ -521,7 +527,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#unsafe_safe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#unsafe_safe_array</test>
                 </configuration>
               </execution>
@@ -529,7 +534,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#unsafe_fast_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#unsafe_fast_array</test>
                 </configuration>
               </execution>
@@ -537,7 +541,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#native_safe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#native_safe_array</test>
                 </configuration>
               </execution>
@@ -545,7 +548,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#native_fast_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#native_fast_array</test>
                 </configuration>
               </execution>
@@ -553,7 +555,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#safe_safe_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#safe_safe_bytebuffer</test>
                 </configuration>
               </execution>
@@ -561,7 +562,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#safe_fast_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#safe_fast_bytebuffer</test>
                 </configuration>
               </execution>
@@ -569,7 +569,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#unsafe_safe_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#unsafe_safe_bytebuffer</test>
                 </configuration>
               </execution>
@@ -577,7 +576,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#unsafe_fast_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#unsafe_fast_bytebuffer</test>
                 </configuration>
               </execution>
@@ -585,7 +583,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#native_safe_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#native_safe_bytebuffer</test>
                 </configuration>
               </execution>
@@ -593,7 +590,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#native_fast_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#native_fast_bytebuffer</test>
                 </configuration>
               </execution>
@@ -603,7 +599,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_fast_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_fast_array</test>
                 </configuration>
               </execution>
@@ -611,7 +606,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_fast_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_fast_array</test>
                 </configuration>
               </execution>
@@ -619,7 +613,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_fast_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_fast_array</test>
                 </configuration>
               </execution>
@@ -629,7 +622,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_fast_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_fast_bytebuffer</test>
                 </configuration>
               </execution>
@@ -637,7 +629,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_fast_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_fast_bytebuffer</test>
                 </configuration>
               </execution>
@@ -645,7 +636,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_fast_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_fast_bytebuffer</test>
                 </configuration>
               </execution>
@@ -655,7 +645,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_high_l1_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_high_l1_array</test>
                 </configuration>
               </execution>
@@ -663,7 +652,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l1_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l1_array</test>
                 </configuration>
               </execution>
@@ -671,7 +659,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_high_l1_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_high_l1_array</test>
                 </configuration>
               </execution>
@@ -681,7 +668,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_high_l9_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_high_l9_array</test>
                 </configuration>
               </execution>
@@ -689,7 +675,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l9_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l9_array</test>
                 </configuration>
               </execution>
@@ -697,7 +682,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_high_l9_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_high_l9_array</test>
                 </configuration>
               </execution>
@@ -707,7 +691,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_high_l17_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_high_l17_array</test>
                 </configuration>
               </execution>
@@ -715,7 +698,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l17_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l17_array</test>
                 </configuration>
               </execution>
@@ -723,7 +705,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_high_l17_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_high_l17_array</test>
                 </configuration>
               </execution>
@@ -733,7 +714,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_high_l1_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_high_l1_bytebuffer</test>
                 </configuration>
               </execution>
@@ -741,7 +721,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l1_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l1_bytebuffer</test>
                 </configuration>
               </execution>
@@ -749,7 +728,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_high_l1_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_high_l1_bytebuffer</test>
                 </configuration>
               </execution>
@@ -759,7 +737,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_high_l9_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_high_l9_bytebuffer</test>
                 </configuration>
               </execution>
@@ -767,7 +744,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l9_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l9_bytebuffer</test>
                 </configuration>
               </execution>
@@ -775,7 +751,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_high_l9_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_high_l9_bytebuffer</test>
                 </configuration>
               </execution>
@@ -785,7 +760,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#safe_high_l17_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#safe_high_l17_bytebuffer</test>
                 </configuration>
               </execution>
@@ -793,7 +767,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l17_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#unsafe_high_l17_bytebuffer</test>
                 </configuration>
               </execution>
@@ -801,7 +774,6 @@
                 <id>fuzz-net.jpountz.fuzz.LZ4CompressorTest#native_high_l17_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4CompressorTest#native_high_l17_bytebuffer</test>
                 </configuration>
               </execution>
@@ -811,7 +783,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash32Test#safe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash32Test#safe_array</test>
                 </configuration>
               </execution>
@@ -819,7 +790,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash32Test#unsafe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash32Test#unsafe_array</test>
                 </configuration>
               </execution>
@@ -827,7 +797,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash32Test#native_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash32Test#native_array</test>
                 </configuration>
               </execution>
@@ -837,7 +806,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash32Test#safe_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash32Test#safe_bytebuffer</test>
                 </configuration>
               </execution>
@@ -845,7 +813,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash32Test#unsafe_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash32Test#unsafe_bytebuffer</test>
                 </configuration>
               </execution>
@@ -853,7 +820,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash32Test#native_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash32Test#native_bytebuffer</test>
                 </configuration>
               </execution>
@@ -863,7 +829,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash64Test#safe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash64Test#safe_array</test>
                 </configuration>
               </execution>
@@ -871,7 +836,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash64Test#unsafe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash64Test#unsafe_array</test>
                 </configuration>
               </execution>
@@ -879,7 +843,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash64Test#native_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash64Test#native_array</test>
                 </configuration>
               </execution>
@@ -889,7 +852,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash64Test#safe_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash64Test#safe_bytebuffer</test>
                 </configuration>
               </execution>
@@ -897,7 +859,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash64Test#unsafe_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash64Test#unsafe_bytebuffer</test>
                 </configuration>
               </execution>
@@ -905,7 +866,6 @@
                 <id>fuzz-net.jpountz.fuzz.XXHash64Test#native_bytebuffer</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.XXHash64Test#native_bytebuffer</test>
                 </configuration>
               </execution>
