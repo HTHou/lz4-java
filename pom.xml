@@ -489,7 +489,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.2.5</version>
             <configuration>
-              <skipTests>true</skipTests>
+              <failIfNoTests>true</failIfNoTests>
               <systemPropertyVariables>
                 <!-- Limit each Jazzer @FuzzTest to the configured duration -->
                 <jazzer.max_duration>${jazzer.max_duration}</jazzer.max_duration>
@@ -502,10 +502,15 @@
             </configuration>
             <executions>
               <execution>
+                <id>default-test</id>
+                <configuration>
+                  <skipTests>true</skipTests>
+                </configuration>
+              </execution>
+              <execution>
                 <id>fuzz-net.jpountz.fuzz.LZ4DecompressorTest#safe_safe_array</id>
                 <goals><goal>test</goal></goals>
                 <configuration>
-                  <skipTests>false</skipTests>
                   <test>net.jpountz.fuzz.LZ4DecompressorTest#safe_safe_array</test>
                 </configuration>
               </execution>
