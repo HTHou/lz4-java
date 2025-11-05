@@ -14,44 +14,42 @@
   limitations under the License.
 }
   @Override
-  public int decompress(${storage} src, final int srcOff@if{ size == "Safe" }, final int srcLen @end{}, ${storage} dest, final int destOff, int destLen) {
+  public @if{ size == "Fast" }int decompress(${storage} src, final int srcOff, ${storage} dest, final int destOff, int destLen) {
+    @if{ storage == "ByteBuffer"}
+      final int srcEnd = src.capacity();
+    @else{}
+      final int srcEnd = src.length;
+    @end{}
+    return decompress(src, srcOff, srcEnd - srcOff, dest, destOff, destLen);
+  }
+
+  private @end{}int decompress(${storage} src, final int srcOff, final int srcLen, ${storage} dest, final int destOff, int destLen) {
+    ${utils}.checkRange(src, srcOff, srcLen);
+    ${utils}.checkRange(dest, destOff, destLen);
+
 @if{ storage == "ByteBuffer"}
     if (src.hasArray() && dest.hasArray()) {
-      return decompress(src.array(), srcOff + src.arrayOffset()@if{ size == "Safe" }, srcLen@end{}, dest.array(), destOff + dest.arrayOffset(), destLen);
+      return decompress(src.array(), srcOff + src.arrayOffset(), srcLen, dest.array(), destOff + dest.arrayOffset(), destLen);
     }
     src = ${utils}.inNativeByteOrder(src);
     dest = ${utils}.inNativeByteOrder(dest);
 @end{}
 @if{ size == "Safe" }
-    ${utils}.checkRange(src, srcOff, srcLen);
-    ${utils}.checkRange(dest, destOff, destLen);
-
     if (destLen == 0) {
       if (srcLen != 1 || ${utils}.readByte(src, srcOff) != 0) {
         throw new LZ4Exception("Output buffer too small");
       }
       return 0;
     }
-
-    final int srcEnd = srcOff + srcLen;
 @else{}
-    ${utils}.checkRange(src, srcOff);
-    ${utils}.checkRange(dest, destOff, destLen);
-
     if (destLen == 0) {
       if (${utils}.readByte(src, srcOff) != 0) {
         throw new LZ4Exception("Malformed input at " + srcOff);
       }
       return 1;
     }
-
-  @if{ storage == "ByteBuffer"}
-    final int srcEnd = src.capacity();
-  @else{}
-    final int srcEnd = src.length;
-  @end{}
 @end{}
-
+    final int srcEnd = srcOff + srcLen;
     final int destEnd = destOff + destLen;
 
     int sOff = srcOff;
