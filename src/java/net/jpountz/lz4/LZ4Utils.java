@@ -38,7 +38,8 @@ enum LZ4Utils {
   /**
    * The LZ4 format uses two integers per sequence, encoded in a special format: 4 bits in a shared "token" byte, and
    * then possibly multiple additional bytes. This method returns the number of bytes used to encode a particular
-   * value, excluding the 4 shared bits.
+   * value, excluding the 4 shared bits. This is the exact length of the encoding {@link LZ4SafeUtils#writeLen} and
+   * equivalent methods implement.
    */
   static int lengthOfEncodedInteger(int value) {
     if (value >= 15) {
@@ -46,6 +47,24 @@ enum LZ4Utils {
     } else {
       return 0;
     }
+  }
+
+  /**
+   * Get the length of an encoded LZ4 sequence. An LZ4 sequence consists of a <i>run</i>, containing bytes that are
+   * copied from the compressed input as-is, and a <i>match</i> which is a reference to previously decompressed bytes.
+   * <p>
+   * Encoding:
+   *
+   * <ul>
+   *   <li>1 byte: Token containing 4 bits of the run length and match length each</li>
+   *   <li>Possibly more bytes to encode the run length</li>
+   *   <li>The run bytes</li>
+   *   <li>2 bytes: Match offset</li>
+   *   <li>Possibly more bytes to encode the match length</li>
+   * </ul>
+   */
+  static int sequenceLength(int runLen, int matchLen) {
+    return 1 + lengthOfEncodedInteger(runLen) + runLen + 2 + lengthOfEncodedInteger(matchLen);
   }
 
   static int hash(int i) {

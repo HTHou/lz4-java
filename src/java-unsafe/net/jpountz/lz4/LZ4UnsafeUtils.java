@@ -23,7 +23,7 @@ import static net.jpountz.lz4.LZ4Constants.LAST_LITERALS;
 import static net.jpountz.lz4.LZ4Constants.ML_BITS;
 import static net.jpountz.lz4.LZ4Constants.ML_MASK;
 import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
-import static net.jpountz.lz4.LZ4Utils.lengthOfEncodedInteger;
+import static net.jpountz.lz4.LZ4Utils.sequenceLength;
 import static net.jpountz.util.UnsafeUtils.readByte;
 import static net.jpountz.util.UnsafeUtils.readInt;
 import static net.jpountz.util.UnsafeUtils.readLong;
@@ -160,7 +160,7 @@ enum LZ4UnsafeUtils {
     final int runLen = matchOff - anchor;
     matchLen -= 4;
 
-    int end = dOff + 1 + lengthOfEncodedInteger(runLen) + runLen + 2 + lengthOfEncodedInteger(matchLen);
+    int end = dOff + sequenceLength(runLen, matchLen);
     if (end > destEnd - 1 - LAST_LITERALS) {
       throw new LZ4Exception("maxDestLen is too small");
     }
