@@ -16,40 +16,35 @@ package net.jpountz.lz4;
  * limitations under the License.
  */
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.Collection;
 
-@RunWith(Parameterized.class)
 public class OutOfBoundsTest {
-    @Parameterized.Parameters
-    public static Collection<Object[]> parameters() {
-        return Arrays.asList(
-                new Object[]{LZ4Factory.fastestInstance().fastDecompressor()},
-                new Object[]{LZ4Factory.fastestJavaInstance().fastDecompressor()},
-                new Object[]{LZ4Factory.nativeInstance().fastDecompressor()},
-                new Object[]{LZ4Factory.safeInstance().fastDecompressor()},
-                new Object[]{LZ4Factory.unsafeInstance().fastDecompressor()}
-        );
-    }
+  public static Collection<Object[]> parameters() {
+    return Arrays.asList(
+      new Object[]{LZ4Factory.fastestInstance().fastDecompressor()},
+      new Object[]{LZ4Factory.fastestJavaInstance().fastDecompressor()},
+      new Object[]{LZ4Factory.nativeInstance().fastDecompressor()},
+      new Object[]{LZ4Factory.safeInstance().fastDecompressor()},
+      new Object[]{LZ4Factory.unsafeInstance().fastDecompressor()}
+    );
+  }
 
-    @Parameterized.Parameter
-    public LZ4FastDecompressor fastDecompressor;
-
-    @Test
-    public void test() {
-        byte[] output = new byte[2055];
-        for (int i = 0; i < 1000000; i++) {
-            try {
-                fastDecompressor.decompress(new byte[]{
-                        (byte) 0xf0,
-                        -1, -1, -1, -1, -1, -1, -1, -1, 0
-                }, output);
-            } catch (LZ4Exception ignored) {
-            }
-        }
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void test(LZ4FastDecompressor fastDecompressor) {
+    byte[] output = new byte[2055];
+    for (int i = 0; i < 1000000; i++) {
+      try {
+        fastDecompressor.decompress(new byte[]{
+          (byte) 0xf0,
+          -1, -1, -1, -1, -1, -1, -1, -1, 0
+        }, output);
+      } catch (LZ4Exception ignored) {
+      }
     }
+  }
 }
