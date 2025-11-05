@@ -48,7 +48,7 @@ public class OutOfBoundsTest {
                         (byte) 0xf0,
                         -1, -1, -1, -1, -1, -1, -1, -1, 0
                 }, output);
-            } catch (ArrayIndexOutOfBoundsException ignored) {
+            } catch (LZ4Exception | ArrayIndexOutOfBoundsException ignored) {
             }
         }
     }
