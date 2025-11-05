@@ -1,4 +1,4 @@
-name: Build Natives and Assemble All-Platforms Jar
+name: Run tests
 
 on:
   push:
