@@ -43,7 +43,7 @@
     }
 @else{}
     if (destLen == 0) {
-      if (${utils}.readByte(src, srcOff) != 0) {
+      if (srcLen < 1 || ${utils}.readByte(src, srcOff) != 0) {
         throw new LZ4Exception("Malformed input at " + srcOff);
       }
       return 1;
