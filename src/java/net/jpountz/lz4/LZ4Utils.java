@@ -42,7 +42,7 @@ enum LZ4Utils {
    */
   static int lengthOfEncodedInteger(int value) {
     if (value >= 15) {
-      return ((value - 15) >>> 8) + 1;
+      return (value - 15) / 0xff + 1;
     } else {
       return 0;
     }
