@@ -20,6 +20,8 @@ import static net.jpountz.lz4.LZ4Constants.HASH_LOG;
 import static net.jpountz.lz4.LZ4Constants.HASH_LOG_64K;
 import static net.jpountz.lz4.LZ4Constants.HASH_LOG_HC;
 import static net.jpountz.lz4.LZ4Constants.MIN_MATCH;
+import static net.jpountz.lz4.LZ4Constants.ML_MASK;
+import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
 
 enum LZ4Utils {
   ;
@@ -51,6 +53,11 @@ enum LZ4Utils {
     return available < required;
   }
 
+  static {
+    // `writeLen` is used for runLen and matchLen; ensure that both masks have the same value, otherwise
+    // the logic of `lengthOfEncodedInteger` below is incorrect
+    assert RUN_MASK == ML_MASK;
+  }
   /**
    * The LZ4 format uses two integers per sequence, encoded in a special format: 4 bits in a shared "token" byte, and
    * then possibly multiple additional bytes. This method returns the number of bytes used to encode a particular
@@ -58,8 +65,8 @@ enum LZ4Utils {
    * equivalent methods implement.
    */
   static int lengthOfEncodedInteger(int value) {
-    if (value >= 15) {
-      return (value - 15) / 0xff + 1;
+    if (value >= RUN_MASK) {
+      return (value - RUN_MASK) / 0xff + 1;
     } else {
       return 0;
     }
