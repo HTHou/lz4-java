@@ -62,7 +62,8 @@
         // encode literal length
         int tokenOff = dOff++;
 
-        if (notEnoughSpace(destEnd - dOff, runLen + (2 + 1 + LAST_LITERALS) + lengthOfEncodedInteger(runLen))) {
+        // we don't know the matchLen yet, do an early check for now.
+        if (notEnoughSpace(destEnd - dOff, sequenceLength(runLen, 0) + 1 + LAST_LITERALS)) {
           throw new LZ4Exception("maxDestLen is too small");
         }
 
@@ -193,7 +194,8 @@
       // encode literal length
       int tokenOff = dOff++;
 
-      if (notEnoughSpace(destEnd - dOff, runLen + (2 + 1 + LAST_LITERALS) + lengthOfEncodedInteger(runLen))) {
+      // we don't know the matchLen yet, do an early check for now.
+      if (notEnoughSpace(destEnd - dOff, sequenceLength(runLen, 0) + 1 + LAST_LITERALS)) {
         throw new LZ4Exception("maxDestLen is too small");
       }
 

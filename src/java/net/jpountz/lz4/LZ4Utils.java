@@ -89,7 +89,7 @@ enum LZ4Utils {
   static int sequenceLength(int runLen, int matchLen) {
     long len = 1 + (long) lengthOfEncodedInteger(runLen) + (long) runLen + 2 + (long) lengthOfEncodedInteger(matchLen);
     if (len > Integer.MAX_VALUE) {
-      throw new LZ4Exception();
+      throw new LZ4Exception("Sequence length too large");
     }
     return (int) len;
   }
