@@ -132,6 +132,8 @@
 
   @Override
   public int compress(${storage} src, final int srcOff, int srcLen, ${storage} dest, final int destOff, int maxDestLen) {
+    ${utils}.checkRange(src, srcOff, srcLen);
+    ${utils}.checkRange(dest, destOff, maxDestLen);
 @if{ storage == "ByteBuffer"}
     if (src.hasArray() && dest.hasArray()) {
       return compress(src.array(), srcOff + src.arrayOffset(), srcLen, dest.array(), destOff + dest.arrayOffset(), maxDestLen);
@@ -139,8 +141,6 @@
     src = ${utils}.inNativeByteOrder(src);
     dest = ${utils}.inNativeByteOrder(dest);
 @end{}
-    ${utils}.checkRange(src, srcOff, srcLen);
-    ${utils}.checkRange(dest, destOff, maxDestLen);
     final int destEnd = destOff + maxDestLen;
 
     if (srcLen < LZ4_64K_LIMIT) {
