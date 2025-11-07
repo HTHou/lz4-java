@@ -24,6 +24,8 @@ import static net.jpountz.lz4.LZ4Constants.LAST_LITERALS;
 import static net.jpountz.lz4.LZ4Constants.ML_BITS;
 import static net.jpountz.lz4.LZ4Constants.ML_MASK;
 import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
+import static net.jpountz.lz4.LZ4Utils.lengthOfEncodedInteger;
+import static net.jpountz.lz4.LZ4Utils.notEnoughSpace;
 import static net.jpountz.lz4.LZ4Utils.sequenceLength;
 import static net.jpountz.util.ByteBufferUtils.readByte;
 import static net.jpountz.util.ByteBufferUtils.readInt;
@@ -151,7 +153,8 @@ enum LZ4ByteBufferUtils {
     matchLen -= 4;
 
     int end = dOff + sequenceLength(runLen, matchLen);
-    if (end > destEnd - 1 - LAST_LITERALS) {
+    // Check for overflow
+    if (end < 0 || notEnoughSpace(destEnd - end, 1 + LAST_LITERALS)) {
       throw new LZ4Exception("maxDestLen is too small");
     }
     final int tokenOff = dOff++;
@@ -190,7 +193,7 @@ enum LZ4ByteBufferUtils {
   static int lastLiterals(ByteBuffer src, int sOff, int srcLen, ByteBuffer dest, int dOff, int destEnd) {
     final int runLen = srcLen;
 
-    if (dOff + runLen + 1 + (runLen + 255 - RUN_MASK) / 255 > destEnd) {
+    if (notEnoughSpace(destEnd - dOff, 1 + lengthOfEncodedInteger(runLen) + runLen)) {
       throw new LZ4Exception();
     }
 

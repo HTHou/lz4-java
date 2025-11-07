@@ -20,6 +20,8 @@ import static net.jpountz.lz4.LZ4Constants.HASH_LOG;
 import static net.jpountz.lz4.LZ4Constants.HASH_LOG_64K;
 import static net.jpountz.lz4.LZ4Constants.HASH_LOG_HC;
 import static net.jpountz.lz4.LZ4Constants.MIN_MATCH;
+import static net.jpountz.lz4.LZ4Constants.ML_MASK;
+import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
 
 enum LZ4Utils {
   ;
@@ -30,11 +32,32 @@ enum LZ4Utils {
     if (length < 0) {
       throw new IllegalArgumentException("length must be >= 0, got " + length);
     } else if (length >= MAX_INPUT_SIZE) {
-        throw new IllegalArgumentException("length must be < " + MAX_INPUT_SIZE);
+      throw new IllegalArgumentException("length must be < " + MAX_INPUT_SIZE);
     }
     return length + length / 255 + 16;
   }
 
+  /**
+   * Returns {@code true} if {@code available < required}.
+   * <p>
+   * Should be used like this:
+   * <pre>
+   * if (notEnoughSpace(end - off, <i>required</i>)) ...
+   * </pre>
+   */
+  static boolean notEnoughSpace(int available, int required) {
+    if (required < 0) {
+      // Overflow; so not enough space
+      return true;
+    }
+    return available < required;
+  }
+
+  static {
+    // `writeLen` is used for runLen and matchLen; ensure that both masks have the same value, otherwise
+    // the logic of `lengthOfEncodedInteger` below is incorrect
+    assert RUN_MASK == ML_MASK;
+  }
   /**
    * The LZ4 format uses two integers per sequence, encoded in a special format: 4 bits in a shared "token" byte, and
    * then possibly multiple additional bytes. This method returns the number of bytes used to encode a particular
@@ -42,8 +65,8 @@ enum LZ4Utils {
    * equivalent methods implement.
    */
   static int lengthOfEncodedInteger(int value) {
-    if (value >= 15) {
-      return (value - 15) / 0xff + 1;
+    if (value >= RUN_MASK) {
+      return (value - RUN_MASK) / 0xff + 1;
     } else {
       return 0;
     }
@@ -64,7 +87,11 @@ enum LZ4Utils {
    * </ul>
    */
   static int sequenceLength(int runLen, int matchLen) {
-    return 1 + lengthOfEncodedInteger(runLen) + runLen + 2 + lengthOfEncodedInteger(matchLen);
+    long len = 1 + (long) lengthOfEncodedInteger(runLen) + (long) runLen + 2 + (long) lengthOfEncodedInteger(matchLen);
+    if (len > Integer.MAX_VALUE) {
+      throw new LZ4Exception("Sequence length too large");
+    }
+    return (int) len;
   }
 
   static int hash(int i) {
