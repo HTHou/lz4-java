@@ -30,9 +30,25 @@ enum LZ4Utils {
     if (length < 0) {
       throw new IllegalArgumentException("length must be >= 0, got " + length);
     } else if (length >= MAX_INPUT_SIZE) {
-        throw new IllegalArgumentException("length must be < " + MAX_INPUT_SIZE);
+      throw new IllegalArgumentException("length must be < " + MAX_INPUT_SIZE);
     }
     return length + length / 255 + 16;
+  }
+
+  /**
+   * Returns {@code true} if {@code available < required}.
+   * <p>
+   * Should be used like this:
+   * <pre>
+   * if (notEnoughSpace(end - off, <i>required</i>)) ...
+   * </pre>
+   */
+  static boolean notEnoughSpace(int available, int required) {
+    if (required < 0) {
+      // Overflow; so not enough space
+      return true;
+    }
+    return available < required;
   }
 
   /**
@@ -64,7 +80,11 @@ enum LZ4Utils {
    * </ul>
    */
   static int sequenceLength(int runLen, int matchLen) {
-    return 1 + lengthOfEncodedInteger(runLen) + runLen + 2 + lengthOfEncodedInteger(matchLen);
+    long len = 1 + (long) lengthOfEncodedInteger(runLen) + (long) runLen + 2 + (long) lengthOfEncodedInteger(matchLen);
+    if (len > Integer.MAX_VALUE) {
+      throw new LZ4Exception();
+    }
+    return (int) len;
   }
 
   static int hash(int i) {

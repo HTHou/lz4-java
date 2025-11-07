@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Locale;
 
+import static net.jpountz.lz4.LZ4Utils.notEnoughSpace;
+
 /**
  * Implementation of the v1.5.1 LZ4 Frame format. This class is NOT thread safe.
  * <p>
@@ -261,7 +263,7 @@ public class LZ4FrameOutputStream extends FilterOutputStream {
 
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
-    if ((off < 0) || (len < 0) || (off + len > b.length)) {
+    if ((off < 0) || (len < 0) || notEnoughSpace(b.length - off, len)) {
       throw new IndexOutOfBoundsException();
     }
     ensureNotFinished();

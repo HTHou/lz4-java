@@ -23,6 +23,7 @@ import static net.jpountz.lz4.LZ4Constants.LAST_LITERALS;
 import static net.jpountz.lz4.LZ4Constants.ML_BITS;
 import static net.jpountz.lz4.LZ4Constants.ML_MASK;
 import static net.jpountz.lz4.LZ4Constants.RUN_MASK;
+import static net.jpountz.lz4.LZ4Utils.notEnoughSpace;
 import static net.jpountz.lz4.LZ4Utils.sequenceLength;
 import static net.jpountz.util.UnsafeUtils.readByte;
 import static net.jpountz.util.UnsafeUtils.readInt;
@@ -161,7 +162,8 @@ enum LZ4UnsafeUtils {
     matchLen -= 4;
 
     int end = dOff + sequenceLength(runLen, matchLen);
-    if (end > destEnd - 1 - LAST_LITERALS) {
+    // Check for overflow
+    if (end < 0 || notEnoughSpace(destEnd - end, 1 + LAST_LITERALS)) {
       throw new LZ4Exception("maxDestLen is too small");
     }
 

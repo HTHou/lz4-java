@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import java.nio.ByteBuffer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UtilsTest {
   @ParameterizedTest
@@ -37,6 +37,21 @@ public class UtilsTest {
       0,
       dest.length
     );
+  }
+
+  @Test
+  public void notEnoughSpace() {
+    assertTrue(LZ4Utils.notEnoughSpace(0, 1));
+    assertTrue(LZ4Utils.notEnoughSpace(3, Integer.MAX_VALUE));
+    assertTrue(LZ4Utils.notEnoughSpace(3, -1));
+    assertTrue(LZ4Utils.notEnoughSpace(0, -1));
+    assertTrue(LZ4Utils.notEnoughSpace(-1, 3));
+    assertTrue(LZ4Utils.notEnoughSpace(-1, 0));
+    assertTrue(LZ4Utils.notEnoughSpace(-1, -1));
+
+    assertFalse(LZ4Utils.notEnoughSpace(0, 0));
+    assertFalse(LZ4Utils.notEnoughSpace(7, 5));
+    assertFalse(LZ4Utils.notEnoughSpace(7, 7));
   }
 
   public enum UtilsImplementation {
