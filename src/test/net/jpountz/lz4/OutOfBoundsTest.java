@@ -128,6 +128,8 @@ public class OutOfBoundsTest {
     assertThrows(LZ4Exception.class, () -> fastDecompressor.decompress(ByteBuffer.wrap(compressed, 0, 7).slice(), 0, ByteBuffer.wrap(output), 0, 16));
   }
 
+  // Note: For JNI decompressor this might not actually overflow because it uses larger variable types,
+  // but instead fails because the input is incomplete
   @ParameterizedTest
   @MethodSource("allDecompressors")
   public void literalLenOverflow(FallibleDecompressor decompressor) {
@@ -147,6 +149,8 @@ public class OutOfBoundsTest {
     assertThrows(LZ4Exception.class, () -> decompressor.decompress(input, output));
   }
 
+  // Note: For JNI decompressor this might not actually overflow because it uses larger variable types,
+  // but instead fails because the input is incomplete
   @ParameterizedTest
   @MethodSource("allDecompressors")
   public void matchLenOverflow(FallibleDecompressor decompressor) {

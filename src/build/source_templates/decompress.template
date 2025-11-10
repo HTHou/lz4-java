@@ -68,6 +68,9 @@
         byte len = (byte) 0xFF;
         while (sOff < srcEnd && (len = ${utils}.readByte(src, sOff++)) == (byte) 0xFF) {
           literalLen += 0xFF;
+          if (literalLen < 0) {
+            throw new LZ4Exception("Too large literalLen");
+          }
         }
         literalLen += len & 0xFF;
       }
@@ -116,6 +119,9 @@
         byte len = (byte) 0xFF;
         while (sOff < srcEnd && (len = ${utils}.readByte(src, sOff++)) == (byte) 0xFF) {
           matchLen += 0xFF;
+          if (matchLen < 0) {
+            throw new LZ4Exception("Too large matchLen");
+          }
         }
         matchLen += len & 0xFF;
       }
