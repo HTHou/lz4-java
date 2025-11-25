@@ -19,9 +19,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.lz4</groupId>
+  <groupId>at.yawk.lz4</groupId>
   <artifactId>lz4-java</artifactId>
-  <version>1.8.1</version>
+  <version>0.0.0</version> <!-- set by jgitver-maven-plugin -->
   <packaging>jar</packaging>
 
   <name>LZ4 Java Compression</name>
@@ -34,6 +34,30 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <developers>
+    <developer>
+      <id>jpountz</id>
+      <name>Adrien Grand</name>
+      <email>jpountz@gmail.com</email>
+    </developer>
+    <developer>
+      <id>odaira</id>
+      <name>Rei Odaira</name>
+      <email>Rei.Odaira@gmail.com</email>
+    </developer>
+    <developer>
+      <id>yawkat</id>
+      <name>Jonas Konrad</name>
+      <email>me@yawk.at</email>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>https://github.com/yawkat/lz4-java.git</connection>
+    <developerConnection>git@github.com:yawkat/lz4-java.git</developerConnection>
+    <url>https://github.com/yawkat/lz4-java</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -238,6 +262,72 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>deploy</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+                <configuration>
+                  <!-- Prevent `gpg` from using pinentry programs -->
+                  <gpgArguments>
+                    <arg>--pinentry-mode</arg>
+                    <arg>loopback</arg>
+                  </gpgArguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.9.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
