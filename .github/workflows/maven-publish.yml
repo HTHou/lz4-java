@@ -25,7 +25,7 @@ jobs:
           server-password: CENTRAL_TOKEN_PASSWORD
 
       - name: Prepare release
-        run: mvn -B -Pdeploy deploy
+        run: ./mvnw -B -Pdeploy deploy
         env:
           CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
           CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
