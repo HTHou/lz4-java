@@ -292,6 +292,13 @@
         <groupId>org.gradlex</groupId>
         <artifactId>gradle-module-metadata-maven-plugin</artifactId>
         <version>1.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>gmm</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
           <capabilities>
             <capability>
