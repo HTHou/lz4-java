@@ -288,6 +288,28 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.gradlex</groupId>
+        <artifactId>gradle-module-metadata-maven-plugin</artifactId>
+        <version>1.2</version>
+        <configuration>
+          <capabilities>
+            <capability>
+              <groupId>org.lz4</groupId>
+              <artifactId>lz4-java</artifactId>
+            </capability>
+            <capability>
+              <!-- there is no lz4-pure-java artifact anymore. -->
+              <groupId>org.lz4</groupId>
+              <artifactId>lz4-pure-java</artifactId>
+            </capability>
+            <capability>
+              <groupId>net.jpountz.lz4</groupId>
+              <artifactId>lz4</artifactId>
+            </capability>
+          </capabilities>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
