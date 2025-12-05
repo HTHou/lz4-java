@@ -6,6 +6,10 @@ import net.jpountz.lz4.LZ4Exception;
 import net.jpountz.lz4.LZ4Factory;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LZ4DecompressorTest {
   private static final int MAX_LEN = 1 << 16;
@@ -34,11 +38,21 @@ public class LZ4DecompressorTest {
           factory.safeDecompressor().decompress(srcBuf, srcOff, src.length - srcOffEnd - srcOff, destBuf, destOff, destLen);
         }
       } else {
-        byte[] dest = new byte[destOff + destLen];
+        // For byte[], we decompress twice with different prior data in the output array, and compare the results. This
+        // makes sure no uninitialized data remains.
+        byte[] dest1 = new byte[destOff + destLen];
+        byte[] dest2 = new byte[destOff + destLen];
+        Arrays.fill(dest2, (byte) 'x');
         if (fast) {
-          factory.fastDecompressor().decompress(src, srcOff, dest, destOff, destLen);
+          int n1 = factory.fastDecompressor().decompress(src, srcOff, dest1, destOff, destLen);
+          int n2 = factory.fastDecompressor().decompress(src, srcOff, dest2, destOff, destLen);
+          assertEquals(n1, n2);
+          assertArrayEquals(Arrays.copyOfRange(dest1, destOff, destOff + destLen), Arrays.copyOfRange(dest2, destOff, destOff + destLen));
         } else {
-          factory.safeDecompressor().decompress(src, srcOff, src.length - srcOffEnd - srcOff, dest, destOff);
+          int n1 = factory.safeDecompressor().decompress(src, srcOff, src.length - srcOffEnd - srcOff, dest1, destOff);
+          int n2 = factory.safeDecompressor().decompress(src, srcOff, src.length - srcOffEnd - srcOff, dest2, destOff);
+          assertEquals(n1, n2);
+          assertArrayEquals(Arrays.copyOfRange(dest1, destOff, destOff + n1), Arrays.copyOfRange(dest2, destOff, destOff + n2));
         }
       }
     } catch (LZ4Exception ignored) {

@@ -22,8 +22,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static net.jpountz.lz4.LZ4Constants.MIN_MATCH;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -176,5 +179,31 @@ public class OutOfBoundsTest {
     byte[] input = inputWriter.toByteArray();
     byte[] output = new byte[2055];
     assertThrows(LZ4Exception.class, () -> decompressor.decompress(input, output));
+  }
+
+  static Stream<Object[]> copyBeyondOutputInputs() {
+    return allDecompressors()
+      .flatMap(decompressor ->
+        IntStream.range(0, 14).boxed().flatMap(dec ->
+          IntStream.range(dec, 14).mapToObj(len -> new Object[]{decompressor, dec.byteValue(), len})));
+  }
+
+  @ParameterizedTest
+  @MethodSource("copyBeyondOutputInputs")
+  public void copyBeyondOutput(FallibleDecompressor decompressor, byte dec, int len) {
+    byte[] compressed = {
+      // padding frame (14 bytes)
+      (byte) 0xe0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      // copy len bytes (+ 4 MIN_MATCH) from -dec
+      (byte) len, dec, 0,
+      // padding frame (12 bytes)
+      (byte) 0xc0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+    byte[] output = new byte[14 + MIN_MATCH + len + MIN_MATCH + 12];
+    Arrays.fill(output, (byte) 0x77);
+
+    decompressor.decompress(compressed, output);
+
+    assertArrayEquals(new byte[output.length], output); // should be all zero
   }
 }
