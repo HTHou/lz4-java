@@ -167,6 +167,8 @@ speed at which they compress/decompress/hash bytes.
 
 Make sure you have a Java 7 installation in your [Maven toolchains.xml](https://maven.apache.org/guides/mini/guide-using-toolchains.html). You may also need a C compiler.
 
+First run git submodule init and then git submodule update to initialize the lz4 submodule in src/lz4.
+
 Then, run `./mvnw verify`.
 
 Building a full artifact with native libraries for all supported platforms is more complex. We do this through github actions.

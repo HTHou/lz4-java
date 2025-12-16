@@ -8,11 +8,7 @@
   - Compile src/java, src/java-unsafe, and generated sources
   - Include resources from src/resources
   - Include native libraries by extracting them from the published 1.8.0 jar
-  - Wrap the jar with bnd 1.50.0 using lz4-java.bnd to match OSGi metadata
   - Preserve Automatic-Module-Name: org.lz4.java
-
-  Note: We deliberately do the bnd wrapping after the regular jar build and overwrite the main artifact,
-  to keep the final jar identical in structure to the Ant "bundle" target output.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -72,6 +68,11 @@
     <native.cc>gcc</native.cc>
     <native.cflags></native.cflags>
     <native.ldflags></native.ldflags>
+
+    <!-- plugin versions -->
+    <bnd.maven.plugin.version>7.1.0</bnd.maven.plugin.version>
+    <packages.version>${project.version}</packages.version>
+    <ivy.version>${project.version}</ivy.version>
   </properties>
 
   <dependencies>
@@ -214,10 +215,27 @@
         <version>3.4.1</version>
         <configuration>
           <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
             <manifestEntries>
               <Automatic-Module-Name>org.lz4.java</Automatic-Module-Name>
             </manifestEntries>
           </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-maven-plugin</artifactId>
+        <version>${bnd.maven.plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>bnd-process</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <bndfile>lz4-java.bnd</bndfile>
         </configuration>
       </plugin>
 
@@ -229,7 +247,7 @@
           <dependency>
             <groupId>biz.aQute.bnd</groupId>
             <artifactId>biz.aQute.bnd.ant</artifactId>
-            <version>7.1.0</version>
+            <version>${bnd.maven.plugin.version}</version>
           </dependency>
           <dependency>
             <groupId>org.mvel</groupId>
@@ -251,38 +269,6 @@
                   <classpath refid="maven.plugin.classpath"/>
                   <arg value="${project.basedir}/src/build/gen_sources.mvel"/>
                 </java>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <!-- Use bndwrap for OSGi stuff that I don't understand. Could probably use maven-bundle-plugin here... -->
-          <execution>
-            <id>bnd-wrap-jar</id>
-            <phase>package</phase>
-            <configuration>
-              <target>
-                <!-- Set properties used by lz4-java.bnd -->
-                <property name="packages.version" value="${project.version}"/>
-                <property name="ivy.revision" value="${project.version}"/>
-                <property name="-noextraheaders" value="true"/>
-                <property name="-reproducible" value="true"/>
-
-                <!-- Define bnd ant task from plugin dependency -->
-                <taskdef resource="aQute/bnd/ant/taskdef.properties" classpathref="maven.plugin.classpath"/>
-
-                <!-- Wrap the plain jar into the final OSGi bundle -->
-                <bndwrap definitions="${project.basedir}"
-                         output="${project.build.directory}/${project.build.finalName}-wrapped.jar"
-                         trace="true">
-                  <fileset dir="${project.build.directory}" includes="${project.build.finalName}.jar"/>
-                </bndwrap>
-
-                <!-- Replace the original jar with the wrapped one (as in Ant: delete plain jar) -->
-                <delete file="${project.build.directory}/${project.build.finalName}.jar"/>
-                <move file="${project.build.directory}/${project.build.finalName}-wrapped.jar"
-                      tofile="${project.build.directory}/${project.build.finalName}.jar"/>
               </target>
             </configuration>
             <goals>
