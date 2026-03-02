@@ -17,7 +17,7 @@ jobs:
     name: Linux natives (${{ matrix.arch }})
     runs-on: ubuntu-latest
     env:
-      NATIVE_BASE_CFLAGS: -O2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fstack-protector-strong -fstack-clash-protection -Wformat -Werror=format-security -fcf-protection
+      NATIVE_BASE_CFLAGS: -O2 -fno-omit-frame-pointer -fstack-protector-strong -fstack-clash-protection -Wformat -Werror=format-security
       NATIVE_XXHASH_EXTRA_CFLAGS: -fno-tree-vectorize
     strategy:
       fail-fast: false
@@ -25,13 +25,13 @@ jobs:
         include:
           - arch: amd64
             cc: gcc
-            arch_cflags: ""
+            arch_cflags: "-mno-omit-leaf-frame-pointer -fcf-protection"
             ldflags: ""
             apt: ""
           - arch: i386
             cc: gcc
-            arch_cflags: "-m32"
-            ldflags: ""
+            arch_cflags: "-mno-omit-leaf-frame-pointer -fcf-protection -m32"
+            ldflags: "-m32"
             apt: "gcc-multilib libc6-dev-i386"
           - arch: aarch64
             cc: aarch64-linux-gnu-gcc
@@ -76,7 +76,7 @@ jobs:
 
       - name: Build (mvn package)
         run: |
-            ./mvnw -B -V -DskipTests \
+              ./mvnw -B -V -DskipTests \
               -Darch.id=${{ matrix.arch }} \
               -Dnative.cc=${{ matrix.cc }} \
               "-Dnative.cflags=${{ env.NATIVE_BASE_CFLAGS }} ${{ matrix.arch_cflags }}" \
