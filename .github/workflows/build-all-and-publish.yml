@@ -96,7 +96,6 @@ jobs:
           path: target/classes/net/jpountz/util/linux/*/liblz4-java.so
           if-no-files-found: error
 
-
   macos:
     name: macOS natives (${{ matrix.os }} - ${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
