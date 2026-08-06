@@ -39,6 +39,10 @@ import net.jpountz.xxhash.XXHashFactory;
  * {@link InputStream} implementation to decode data written with
  * {@link LZ4BlockOutputStream}. This class is not thread-safe and does not
  * support {@link #mark(int)}/{@link #reset()}.
+ * <p>Use {@link Builder#withAcceptOversizedBlocks(boolean)} only for trusted
+ * inputs that may contain noncanonical legacy LZ4 blocks. Enabling it restores
+ * acceptance of blocks whose compressed length is greater than or equal to the
+ * original length, which may permit large attacker-controlled allocations.</p>
  * @see LZ4BlockOutputStream
  */
 public class LZ4BlockInputStream extends FilterInputStream {
@@ -47,6 +51,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
   private final LZ4SafeDecompressor safeDecompressor;
   private final Checksum checksum;
   private final boolean stopOnEmptyBlock;
+  private final boolean acceptOversizedBlocks;
   private byte[] buffer;
   private byte[] compressedBuffer;
   private int originalLen;
@@ -67,7 +72,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
    */
   @Deprecated
   public LZ4BlockInputStream(InputStream in, LZ4FastDecompressor fastDecompressor, Checksum checksum, boolean stopOnEmptyBlock) {
-    this(in, fastDecompressor, null, checksum, stopOnEmptyBlock);
+    this(in, fastDecompressor, null, checksum, stopOnEmptyBlock, false);
   }
 
   /**
@@ -85,7 +90,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
    */
   @Deprecated
   public LZ4BlockInputStream(InputStream in, LZ4FastDecompressor fastDecompressor, Checksum checksum) {
-    this(in, fastDecompressor, checksum, true);
+    this(in, fastDecompressor, null, checksum, true, false);
   }
 
   /**
@@ -101,7 +106,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
    */
   @Deprecated
   public LZ4BlockInputStream(InputStream in, LZ4FastDecompressor fastDecompressor) {
-    this(in, fastDecompressor, XXHashFactory.fastestInstance().newStreamingHash32(DEFAULT_SEED).asChecksum(), true);
+    this(in, fastDecompressor, null, XXHashFactory.fastestInstance().newStreamingHash32(DEFAULT_SEED).asChecksum(), true, false);
   }
 
   /**
@@ -117,7 +122,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
    */
   @Deprecated
   public LZ4BlockInputStream(InputStream in, boolean stopOnEmptyBlock) {
-    this(in, LZ4Factory.fastestInstance().fastDecompressor(), XXHashFactory.fastestInstance().newStreamingHash32(DEFAULT_SEED).asChecksum(), stopOnEmptyBlock);
+    this(in, LZ4Factory.fastestInstance().fastDecompressor(), null, XXHashFactory.fastestInstance().newStreamingHash32(DEFAULT_SEED).asChecksum(), stopOnEmptyBlock, false);
   }
 
   /**
@@ -131,7 +136,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
    */
   @Deprecated
   public LZ4BlockInputStream(InputStream in) {
-    this(in, LZ4Factory.fastestInstance().fastDecompressor());
+    this(in, LZ4Factory.fastestInstance().fastDecompressor(), null, XXHashFactory.fastestInstance().newStreamingHash32(DEFAULT_SEED).asChecksum(), true, false);
   }
 
   /**
@@ -147,15 +152,19 @@ public class LZ4BlockInputStream extends FilterInputStream {
    *                          equivalent to the instance which has been used to
    *                          write the stream
    * @param stopOnEmptyBlock  whether read is stopped on an empty block
+   * @param acceptOversizedBlocks whether noncanonical legacy LZ4 blocks with
+   *                              compressed length greater than or equal to
+   *                              original length are accepted
    */
   private LZ4BlockInputStream(InputStream in, LZ4FastDecompressor fastDecompressor, LZ4SafeDecompressor safeDecompressor,
-                              Checksum checksum, boolean stopOnEmptyBlock) {
+                              Checksum checksum, boolean stopOnEmptyBlock, boolean acceptOversizedBlocks) {
     super(in);
 
     this.fastDecompressor = fastDecompressor;
     this.safeDecompressor = safeDecompressor;
     this.checksum = checksum;
     this.stopOnEmptyBlock = stopOnEmptyBlock;
+    this.acceptOversizedBlocks = acceptOversizedBlocks;
     this.buffer = new byte[0];
     this.compressedBuffer = new byte[HEADER_LENGTH];
     o = originalLen = 0;
@@ -168,6 +177,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
    * <li> decompressor - {@code LZ4Factory.fastestInstance().safeDecompressor()} </li>
    * <li> checksum - {@link XXHash32} </li>
    * <li> stopOnEmptyBlock - {@code true} </li>
+   * <li> acceptOversizedBlocks - {@code false} </li>
    * </ul>
    * @return new instance of {@link Builder} to be used to configure and build new LZ4 input stream
    */
@@ -262,7 +272,8 @@ public class LZ4BlockInputStream extends FilterInputStream {
       || compressedLen < 0
       || (originalLen == 0 && compressedLen != 0)
       || (originalLen != 0 && compressedLen == 0)
-      || (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)) {
+      || (compressionMethod == COMPRESSION_METHOD_RAW && originalLen != compressedLen)
+      || (compressionMethod == COMPRESSION_METHOD_LZ4 && !acceptOversizedBlocks && compressedLen >= originalLen)) {
       throw new IOException("Stream is corrupted");
     }
     if (originalLen == 0 && compressedLen == 0) {
@@ -365,6 +376,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
    */
   public static final class Builder {
     private boolean stopOnEmptyBlock = true;
+    private boolean acceptOversizedBlocks = false;
     private LZ4FastDecompressor fastDecompressor;
     private LZ4SafeDecompressor safeDecompressor;
     private Checksum checksum;
@@ -380,6 +392,21 @@ public class LZ4BlockInputStream extends FilterInputStream {
      */
     public Builder withStopOnEmptyBlock(boolean stopOnEmptyBlock) {
       this.stopOnEmptyBlock = stopOnEmptyBlock;
+      return this;
+    }
+
+    /**
+     * Registers whether the builder should accept oversized blocks whose
+     * compressed length is greater than or equal to the original length.
+     * <p>Only enable this for trusted inputs. Accepting such blocks may permit
+     * large attacker-controlled allocations.</p>
+     *
+     * @param acceptOversizedBlocks whether oversized blocks should be accepted
+     * @return current builder instance
+     * @since 1.11.2
+     */
+    public Builder withAcceptOversizedBlocks(boolean acceptOversizedBlocks) {
+      this.acceptOversizedBlocks = acceptOversizedBlocks;
       return this;
     }
 
@@ -433,6 +460,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
      * @see #withDecompressor(LZ4FastDecompressor)
      * @see #withDecompressor(LZ4SafeDecompressor)
      * @see #withStopOnEmptyBlock(boolean)
+     * @see #withAcceptOversizedBlocks(boolean)
      */
     public LZ4BlockInputStream build(InputStream in) {
       Checksum checksum = this.checksum;
@@ -445,7 +473,7 @@ public class LZ4BlockInputStream extends FilterInputStream {
       if (fastDecompressor == null && safeDecompressor == null) {
         safeDecompressor = LZ4Factory.fastestInstance().safeDecompressor();
       }
-      return new LZ4BlockInputStream(in, fastDecompressor, safeDecompressor, checksum, stopOnEmptyBlock);
+      return new LZ4BlockInputStream(in, fastDecompressor, safeDecompressor, checksum, stopOnEmptyBlock, acceptOversizedBlocks);
     }
   }
 }

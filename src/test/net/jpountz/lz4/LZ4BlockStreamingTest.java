@@ -403,4 +403,86 @@ public class LZ4BlockStreamingTest extends AbstractLZ4Test {
     e = assertThrows(IOException.class, () -> lz4BlockInputStreamBuilder().build(new ByteArrayInputStream(bytesWrongDecompressed)).readAllBytes());
     assertEquals("Stream is corrupted", e.getMessage());
   }
+
+  @Test
+  public void testRejectsInvalidLz4CompressedLength() {
+    byte[] bytesCompressedEqOriginal = {
+      76, 90, 52, 66, 108, 111, 99, 107, 32,
+      // Compressed length
+      16, 0, 0, 0,
+      // Decompressed length
+      16, 0, 0, 0,
+      // Header checksum
+      -53, 21, -62, 6,
+      // Payload
+      64, 1, 2, 3, 4, 4, 0, -128, 5, 6, 7, 8, 9, 10, 11, 12,
+      // Terminator
+      76, 90, 52, 66, 108, 111, 99, 107, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+    var e = assertThrows(IOException.class, () -> lz4BlockInputStreamBuilder().build(new ByteArrayInputStream(bytesCompressedEqOriginal)).readAllBytes());
+    assertEquals("Stream is corrupted", e.getMessage());
+
+    byte[] bytesCompressedGtOriginal = {
+      76, 90, 52, 66, 108, 111, 99, 107, 32,
+      // Compressed length
+      9, 0, 0, 0,
+      // Decompressed length
+      8, 0, 0, 0,
+      // Header checksum
+      -91, -16, 50, 4,
+      // Payload
+      -128, 1, 2, 3, 4, 5, 6, 7, 8,
+      // Terminator
+      76, 90, 52, 66, 108, 111, 99, 107, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+    e = assertThrows(IOException.class, () -> lz4BlockInputStreamBuilder().build(new ByteArrayInputStream(bytesCompressedGtOriginal)).readAllBytes());
+    assertEquals("Stream is corrupted", e.getMessage());
+  }
+
+  @Test
+  public void testAcceptsInvalidLz4CompressedLengthInOversizedBlocksMode() throws IOException {
+    byte[] bytesCompressedEqOriginal = {
+      76, 90, 52, 66, 108, 111, 99, 107, 32,
+      // Compressed length
+      16, 0, 0, 0,
+      // Decompressed length
+      16, 0, 0, 0,
+      // Header checksum
+      -53, 21, -62, 6,
+      // Payload
+      64, 1, 2, 3, 4, 4, 0, -128, 5, 6, 7, 8, 9, 10, 11, 12,
+      // Terminator
+      76, 90, 52, 66, 108, 111, 99, 107, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+    byte[] expectedCompressedEqOriginal = {
+      1, 2, 3, 4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    };
+    LZ4BlockInputStream in = lz4BlockInputStreamBuilder()
+      .withAcceptOversizedBlocks(true)
+      .build(new ByteArrayInputStream(bytesCompressedEqOriginal));
+    assertArrayEquals(expectedCompressedEqOriginal, in.readAllBytes());
+    in.close();
+
+    byte[] bytesCompressedGtOriginal = {
+      76, 90, 52, 66, 108, 111, 99, 107, 32,
+      // Compressed length
+      9, 0, 0, 0,
+      // Decompressed length
+      8, 0, 0, 0,
+      // Header checksum
+      -91, -16, 50, 4,
+      // Payload
+      -128, 1, 2, 3, 4, 5, 6, 7, 8,
+      // Terminator
+      76, 90, 52, 66, 108, 111, 99, 107, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    };
+    byte[] expectedCompressedGtOriginal = {
+      1, 2, 3, 4, 5, 6, 7, 8
+    };
+    in = lz4BlockInputStreamBuilder()
+      .withAcceptOversizedBlocks(true)
+      .build(new ByteArrayInputStream(bytesCompressedGtOriginal));
+    assertArrayEquals(expectedCompressedGtOriginal, in.readAllBytes());
+    in.close();
+  }
 }
